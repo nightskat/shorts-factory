@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS step_results (
     started_at DATETIME,
     finished_at DATETIME,
     lease_owner TEXT,
-    lease_heartbeat_at DATETIME,
+    lease_heartbeat_at INTEGER,
     attempt_id TEXT,
     PRIMARY KEY (job_id, step_name),
     FOREIGN KEY (job_id) REFERENCES jobs(id)

@@ -1,8 +1,11 @@
 import os
+import json
+import socket
 from pathlib import Path
+from datetime import datetime
 
 BASE_DIR = Path(__file__).parent.parent
-DATA_DIR = BASE_DIR / "data"
+DATA_DIR = Path(os.getenv("SHORTS_DATA_DIR", BASE_DIR / "data"))
 DB_PATH = DATA_DIR / "shorts.db"
 ROLLOUT_JSONL = DATA_DIR / "rollouts" / "build-cycle.jsonl"
 
@@ -12,17 +15,19 @@ WEB_PORT = int(os.getenv("WEB_PORT", "8765"))
 LEASE_HEARTBEAT_SEC = 30
 LEASE_STALE_SEC = 120
 
-import json
-from datetime import datetime
+def get_lease_owner() -> str:
+    return f"{os.getpid()}@{socket.gethostname()}"
 
 def snapshot_execution_context(job_id: str, extra_params: dict = None) -> str:
+    # Capture all SHORTS_* and relevant provider env vars
+    env_snapshot = {k: v for k, v in os.environ.items() 
+                    if k.startswith("SHORTS_") or k.startswith("LLM_") or k.startswith("TTS_")}
+    
     snapshot = {
         "job_id": job_id,
         "timestamp": str(datetime.now()),
-        "env": {
-            "llm_provider": os.getenv("LLM_PROVIDER", "openrouter"),
-            "tts_provider": os.getenv("TTS_PROVIDER", "edge-tts"),
-        }
+        "lease_owner": get_lease_owner(),
+        "env": env_snapshot
     }
     if extra_params:
         snapshot.update(extra_params)
