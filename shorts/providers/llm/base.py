@@ -1,5 +1,9 @@
 from abc import ABC, abstractmethod
 
+class ProviderError(Exception):
+    """Base class for all provider-related errors."""
+    pass
+
 class LLMProvider(ABC):
     """Abstract base class for all LLM providers."""
 
