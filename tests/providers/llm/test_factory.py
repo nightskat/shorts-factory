@@ -10,11 +10,20 @@ def test_get_llm_provider_invalid():
     with pytest.raises(ValueError, match="Unknown LLM provider"):
         get_llm_provider("invalid")
 
-@pytest.mark.parametrize("provider", ["codex-cli"])
+@pytest.mark.parametrize("provider", [])
 def test_get_llm_provider_placeholders(provider):
     """get_llm_provider should raise NotImplementedError for valid placeholders."""
     with pytest.raises(NotImplementedError, match=f"Provider {provider} not yet implemented"):
         get_llm_provider(provider)
+
+def test_get_llm_provider_codex_cli():
+    """get_llm_provider should return CodexCLILLMProvider."""
+    from unittest.mock import patch
+    with patch("shorts.providers.llm.codex_cli.run_cli_command") as mock_run:
+        mock_run.return_value = "codex-cli 0.130.0"
+        provider = get_llm_provider("codex-cli")
+        assert provider.provider_id == "codex-cli"
+        assert "Codex CLI" in provider.name()
 
 def test_get_llm_provider_openrouter(monkeypatch):
     """get_llm_provider should return OpenRouterLLMProvider."""
