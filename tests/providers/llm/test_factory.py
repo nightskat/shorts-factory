@@ -9,3 +9,9 @@ def test_get_llm_provider_invalid():
     assert get_llm_provider is not None, "get_llm_provider not imported"
     with pytest.raises(ValueError, match="Unknown LLM provider"):
         get_llm_provider("invalid")
+
+@pytest.mark.parametrize("provider", ["openrouter", "claude-cli", "codex-cli"])
+def test_get_llm_provider_placeholders(provider):
+    """get_llm_provider should raise NotImplementedError for valid placeholders."""
+    with pytest.raises(NotImplementedError, match=f"Provider {provider} not yet implemented"):
+        get_llm_provider(provider)
