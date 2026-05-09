@@ -129,15 +129,22 @@ class Pipeline:
     # --- Task 4: Resume/Skip Semantics ---
 
     def resolve_step_state(self, job_id: str, step_name: str) -> str:
+        import time
         with contextlib.closing(sqlite3.connect(self.db_path)) as conn:
             row = conn.execute(
-                "SELECT status FROM step_results WHERE job_id=? AND step_name=?",
+                "SELECT status, lease_heartbeat_at FROM step_results WHERE job_id=? AND step_name=?",
                 (job_id, step_name)
             ).fetchone()
 
         if row is None:
             return "pending"
-        return row[0]
+        
+        status, heartbeat = row[0], row[1]
+        if status == "running" and heartbeat is not None:
+            if int(time.time()) - int(heartbeat) > 120:
+                return "failed"
+                
+        return status
 
     def skip_step(self, job_id: str, step_name: str, reason: str):
         with contextlib.closing(sqlite3.connect(self.db_path)) as conn:
