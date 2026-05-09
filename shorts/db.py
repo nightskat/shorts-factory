@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from contextlib import closing
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS jobs (
@@ -59,6 +60,6 @@ def init_db(db_path: str):
     if db_dir and not os.path.exists(db_dir):
         os.makedirs(db_dir)
         
-    with sqlite3.connect(db_path) as conn:
-        conn.executescript(SCHEMA)
-        conn.commit()
+    with closing(sqlite3.connect(db_path)) as conn:
+        with conn:
+            conn.executescript(SCHEMA)

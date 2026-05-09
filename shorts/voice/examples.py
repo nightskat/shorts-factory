@@ -1,5 +1,6 @@
 import sqlite3
 from typing import List, Optional
+from contextlib import closing
 import shorts.config
 
 def _get_db_path() -> str:
@@ -7,15 +8,15 @@ def _get_db_path() -> str:
 
 def add_seed_example(content: str) -> None:
     """Add a seed script example to the database."""
-    with sqlite3.connect(_get_db_path()) as conn:
-        conn.execute("INSERT INTO voice_examples (content) VALUES (?)", (content,))
-        conn.commit()
+    with closing(sqlite3.connect(_get_db_path())) as conn:
+        with conn:
+            conn.execute("INSERT INTO voice_examples (content) VALUES (?)", (content,))
 
 def add_approved_script(script_body: str, edit_delta: Optional[str] = "") -> None:
     """Add an approved script to the database."""
-    with sqlite3.connect(_get_db_path()) as conn:
-        conn.execute("INSERT INTO approved_scripts (script_body, edit_delta) VALUES (?, ?)", (script_body, edit_delta))
-        conn.commit()
+    with closing(sqlite3.connect(_get_db_path())) as conn:
+        with conn:
+            conn.execute("INSERT INTO approved_scripts (script_body, edit_delta) VALUES (?, ?)", (script_body, edit_delta))
 
 def get_top_examples(limit: int = 3) -> List[str]:
     """
@@ -31,6 +32,6 @@ def get_top_examples(limit: int = 3) -> List[str]:
         ORDER BY created_at DESC, source_type DESC, source_id DESC
         LIMIT ?
     """
-    with sqlite3.connect(_get_db_path()) as conn:
+    with closing(sqlite3.connect(_get_db_path())) as conn:
         cursor = conn.execute(query, (limit,))
         return [row[0] for row in cursor.fetchall()]
