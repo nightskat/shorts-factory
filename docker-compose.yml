@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  shorts-factory:
+    build: .
+    ports:
+      - "8765:8765"
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    environment:
+      - WEB_BIND=0.0.0.0:8765
+    command: shorts-factory serve --host 0.0.0.0 --port 8765
+    restart: unless-stopped
