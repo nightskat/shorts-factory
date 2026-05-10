@@ -1,16 +1,14 @@
 # Contributing to shorts-factory
 
-This is an early-stage open-source project looking for engineers who want to build something real. The core architecture is stable — what's missing is real integrations and test coverage.
+`shorts-factory` is in early development. The architecture is settled, but several integrations remain stubbed and overall test coverage needs to grow. Contributions of any size are welcome.
 
-## What we need most
+## Where help is most useful
 
-Specific areas where help is wanted right now:
-
-- **YouTube upload** — implement the actual YouTube Data API v3 call in `shorts/nodes/upload_yt.py`. The idempotency logic is already there; the API call is a stub.
-- **End-to-end test** — a test that runs the real pipeline with ffmpeg and Pexels (or a Pexels mock). Currently only unit tests and mock-based integration tests exist.
-- **Additional LLM providers** — Anthropic native (non-OpenRouter), OpenAI direct, local Ollama. The provider interface is in `shorts/providers/llm/base.py`.
-- **Additional TTS providers** — ElevenLabs, Kokoro. Edge-TTS is the only implementation today.
-- **Better web UI** — the current UI is minimal HTML/Jinja2. A React or HTMX upgrade would be welcome. Design system: shadcn/ui + Tailwind.
+- **YouTube upload** — implement the YouTube Data API v3 call in `shorts/nodes/upload_yt.py`. The idempotency layer is in place; only the API call itself is a stub.
+- **End-to-end pipeline test** — a test that exercises the real pipeline with ffmpeg and Pexels (or a Pexels mock). Today only unit and mock-based tests exist.
+- **Additional LLM providers** — Anthropic native (non-OpenRouter), OpenAI direct, local Ollama. The provider interface lives at `shorts/providers/llm/base.py`.
+- **Additional TTS providers** — ElevenLabs, Kokoro, or others. Edge-TTS is the only implementation today.
+- **Web UI improvements** — the current UI is minimal HTML/Jinja2. An HTMX or React upgrade would be a welcome change.
 
 ## Dev setup
 
@@ -28,18 +26,18 @@ cp .env.example .env
 pytest tests/ -q
 ```
 
-All 111 tests should pass. If any fail on a clean clone, open an issue.
+If any test fails on a clean checkout, please open an issue — that's a real bug.
 
 ## Code style
 
-- Follow the patterns already in the codebase — terse, no unnecessary comments
-- One file per pipeline node in `shorts/nodes/`
-- New nodes must implement the `StepResult` contract from `shorts/nodes/__init__.py`
-- No new dependencies without discussion in an issue first
+- Follow the patterns already in the codebase: terse, minimal comments.
+- One file per pipeline node under `shorts/nodes/`.
+- New nodes implement the `StepResult` contract defined in `shorts/nodes/__init__.py`.
+- For new runtime dependencies, please open an issue first to discuss.
 
-## PR checklist
+## Pull requests
 
-- [ ] All existing tests pass: `pytest tests/ -q`
-- [ ] New behavior has test coverage
-- [ ] Commit message is descriptive (`feat(nodes): implement upload_yt` not `fix stuff`)
-- [ ] No secrets, no `.env` files committed
+- All existing tests pass: `pytest tests/ -q`
+- New behaviour comes with test coverage
+- Commit messages follow conventional commits (`feat(...)`, `fix(...)`, `docs(...)`, ...)
+- No secrets, credentials, or `.env` files committed
