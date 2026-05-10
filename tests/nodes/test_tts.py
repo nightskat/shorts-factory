@@ -10,7 +10,7 @@ def memory_db():
     conn = sqlite3.connect(":memory:")
     conn.execute(
         """
-        CREATE TABLE steps (
+        CREATE TABLE step_results (
             job_id TEXT,
             step_name TEXT,
             status TEXT,
@@ -40,7 +40,7 @@ def test_tts_node_success(mock_get_provider, memory_db, tmp_path):
 
     # Insert fake idea_gen step output
     memory_db.execute(
-        "INSERT INTO steps (job_id, step_name, status, output_path) VALUES (?, ?, ?, ?)",
+        "INSERT INTO step_results (job_id, step_name, status, output_path) VALUES (?, ?, ?, ?)",
         (job_id, "idea_gen", "done", str(script_path))
     )
     memory_db.commit()

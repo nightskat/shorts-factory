@@ -9,7 +9,7 @@ def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connect
     # 1. Query db_conn to find the output_path of the idea_gen step for this job_id
     cursor = db_conn.cursor()
     cursor.execute(
-        "SELECT output_path FROM steps WHERE job_id = ? AND step_name = ? AND status = 'done'",
+        "SELECT output_path FROM step_results WHERE job_id = ? AND step_name = ? AND status = 'done'",
         (job_id, "idea_gen")
     )
     row = cursor.fetchone()

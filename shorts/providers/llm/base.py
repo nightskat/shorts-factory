@@ -24,6 +24,10 @@ class LLMProvider(ABC):
         """Generate a completion from the LLM."""
         pass
 
+    def generate(self, system: str, user: str, **kwargs) -> str:
+        """Alias for complete(); satisfies callers that use generate()."""
+        return self.complete(system, user, **kwargs)
+
     @abstractmethod
     def name(self) -> str:
         """Human-readable name of the provider."""

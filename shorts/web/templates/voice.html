@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Voice — Shorts Factory{% endblock %}
+{% block content %}
+<h1>Voice Examples</h1>
+
+<div class="card">
+  <h2>Thêm approved script</h2>
+  <form method="post" action="/voice">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="form-group">
+      <label for="script_body">Nội dung script</label>
+      <textarea id="script_body" name="script_body" rows="5" required
+                placeholder="Dán nội dung script đã được duyệt..."></textarea>
+    </div>
+    <button type="submit">Thêm</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Approved scripts ({{ scripts|length }})</h2>
+  {% if scripts %}
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Script body</th>
+        <th>Ngày duyệt</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for s in scripts %}
+      <tr>
+        <td class="env-key">{{ s.id }}</td>
+        <td style="max-width:500px;white-space:pre-wrap;word-break:break-word;font-size:0.8rem;">{{ s.script_body[:200] }}{% if s.script_body|length > 200 %}…{% endif %}</td>
+        <td class="env-key">{{ s.approved_at }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#666;font-size:0.875rem;">Chưa có approved script nào.</p>
+  {% endif %}
+</div>
+{% endblock %}
