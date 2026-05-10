@@ -6,3 +6,22 @@ data/
 secrets/
 .env
 .venv
+
+# Build artifacts
+*.egg-info/
+build/
+dist/
+
+# Generated media (use tests/fixtures/ for committed test data)
+*.mp3
+*.mp4
+*.db
+*.wav
+
+# OS noise
+.DS_Store
+
+# Private build planning (kept locally, not committed)
+conductor/
+docs/superpowers/
+docs/build-log.md

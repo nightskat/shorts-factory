@@ -17,7 +17,7 @@ Specific areas where help is wanted right now:
 ```bash
 git clone https://github.com/nightskat/shorts-factory.git
 cd shorts-factory
-pip install -e ".[web,cli]"
+pip install -e ".[web,cli,dev]"
 cp .env.example .env
 # Fill at minimum: OPENROUTER_API_KEY
 ```
@@ -25,7 +25,7 @@ cp .env.example .env
 ## Running tests
 
 ```bash
-PYTHONPATH=. python -m pytest tests/ -q
+pytest tests/ -q
 ```
 
 All 111 tests should pass. If any fail on a clean clone, open an issue.
@@ -39,7 +39,7 @@ All 111 tests should pass. If any fail on a clean clone, open an issue.
 
 ## PR checklist
 
-- [ ] All existing tests pass: `PYTHONPATH=. python -m pytest tests/ -q`
+- [ ] All existing tests pass: `pytest tests/ -q`
 - [ ] New behavior has test coverage
 - [ ] Commit message is descriptive (`feat(nodes): implement upload_yt` not `fix stuff`)
 - [ ] No secrets, no `.env` files committed
