@@ -25,3 +25,11 @@ dist/
 conductor/
 docs/superpowers/
 docs/build-log.md
+
+# Claude Code session artifacts
+.claude/
+
+# Debug/repro scripts (not part of codebase)
+stdout.txt
+stderr.txt
+reproduce_leak.py
