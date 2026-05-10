@@ -1,5 +1,9 @@
 # shorts-factory
 
+[![CI](https://github.com/nightskat/shorts-factory/actions/workflows/ci.yml/badge.svg)](https://github.com/nightskat/shorts-factory/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+
 > Turn any idea into a YouTube Short — bring your own LLM, any language, any niche.
 
 ## Why this exists
@@ -115,7 +119,7 @@ In rough priority order:
 - [ ] Idea ingestion sources (RSS, YouTube channel feeds)
 - [ ] Additional LLM providers (Anthropic native, local Ollama)
 - [ ] Additional TTS providers (ElevenLabs, Kokoro)
-- [ ] GitHub Actions CI
+- [x] GitHub Actions CI (Linux + macOS, Python 3.11/3.12)
 
 ## Contributing
 
