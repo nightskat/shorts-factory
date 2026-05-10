@@ -1,27 +1,22 @@
-from typing import Dict, Any
+# factory.py — LLM provider factory
+# Returns the correct provider instance given a name string and env dict.
 from shorts.providers.llm.base import LLMProvider
 from shorts.providers.llm.openrouter import OpenRouterLLMProvider
 from shorts.providers.llm.claude_cli import ClaudeCLILLMProvider
 from shorts.providers.llm.codex_cli import CodexCLILLMProvider
 
-def get_llm_provider(provider_name: str) -> LLMProvider:
-    """Factory function to get an LLM provider instance."""
-    providers = {
-        "openrouter": OpenRouterLLMProvider,
-        "claude-cli": ClaudeCLILLMProvider,
-        "codex-cli": CodexCLILLMProvider,
-    }
-    
-    if provider_name not in providers:
-        raise ValueError(f"Unknown LLM provider: {provider_name}")
-    
+
+def get_llm_provider(provider_name: str, env: dict = None) -> LLMProvider:
+    if env is None:
+        env = {}
+
     if provider_name == "openrouter":
-        return OpenRouterLLMProvider()
-    
+        return OpenRouterLLMProvider(env=env)
+
     if provider_name == "claude-cli":
-        return ClaudeCLILLMProvider()
+        return ClaudeCLILLMProvider(env=env)
 
     if provider_name == "codex-cli":
-        return CodexCLILLMProvider()
-    
-    raise NotImplementedError(f"Provider {provider_name} not yet implemented")
+        return CodexCLILLMProvider(env=env)
+
+    raise ValueError(f"Unknown LLM provider: {provider_name}")

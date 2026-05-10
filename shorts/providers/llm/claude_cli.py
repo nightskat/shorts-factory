@@ -9,7 +9,8 @@ class ClaudeCLILLMProvider(LLMProvider):
     LLM Provider using the Anthropic Claude CLI.
     """
     
-    def __init__(self):
+    def __init__(self, env: dict = None):
+        self._env = env or {}
         self._version: Optional[str] = None
         self._probe_version()
 
