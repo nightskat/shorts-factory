@@ -4,26 +4,26 @@
 
 ## Why this exists
 
-Tools like Pictory and InVideo will generate your video, but they pick the LLM, control the prompts, and charge you per render on top of your existing AI subscriptions. This project does the opposite: you bring your own API keys, the pipeline is fully local and hackable, and every step is idempotent — crash at render, resume at render.
+Most hosted tools that turn an idea into a short-form video pick the LLM for you, control the prompts, and charge per render on top of any AI subscription you already pay for. `shorts-factory` is the opposite: you bring your own API keys, the pipeline runs locally, every step is idempotent, and the code is small enough to read end to end.
 
-The one-line truth: **if you already pay for Claude, GPT, or Gemini, you shouldn't pay again to render a video.**
+If you already pay for an LLM subscription, you shouldn't have to pay again to render a video.
 
-## Status: alpha / RFC
+## Status
 
-The pipeline runs end-to-end with mocks. Core infrastructure (job model, lease semantics, step runner, HITL gate) is solid and tested. What's still stubbed:
+Alpha. The pipeline runs end-to-end against mocks, and the core infrastructure (job model, lease semantics, step runner, HITL gate) has unit-test coverage. Known gaps:
 
-- `upload_yt` — YouTube Data API v3 call is a no-op placeholder
-- `bgm_mix`, `clips`, `render` — call real ffmpeg/Pexels but have no CI coverage yet
+- `upload_yt` — YouTube Data API v3 call is a placeholder
+- `bgm_mix`, `clips`, `render` — invoke real ffmpeg/Pexels but lack end-to-end test coverage
 - Web UI — minimal HTML/Jinja2, no production hardening
 
-This is a published RFC. The architecture decisions are made; the plumbing needs hands. If you like the design and want to help harden it, read [CONTRIBUTING.md](CONTRIBUTING.md).
+The architecture is settled; integration work and hardening remain. Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for areas where help is most useful.
 
-## The 4 USPs
+## What's distinctive
 
-1. **Bring Your Own LLM** — OpenRouter (default), OpenAI, Anthropic, Gemini, or local Ollama
-2. **HITL gate** — review scripts before burning render time
-3. **Idempotent pipeline** — resume any job from any step after a crash
-4. **Few-shot voice** — your approved scripts train future generations
+1. **Bring your own LLM** — OpenRouter (default), OpenAI, Anthropic, Gemini, or local Ollama. No hardcoded provider.
+2. **Human-in-the-loop gate** — scripts can be reviewed before any render budget is spent.
+3. **Idempotent pipeline** — every step records its result; a job can resume from the last successful step after a crash.
+4. **Few-shot voice anchoring** — approved scripts are stored and replayed as examples on subsequent generations, so the output stays in a consistent voice over time.
 
 ## Quick Start
 
@@ -43,6 +43,13 @@ pip install -e ".[web,cli]"
 cp .env.example .env
 shorts-factory serve
 # Web UI at http://localhost:8765
+```
+
+For local development (running the test suite), install the dev extras as well:
+
+```bash
+pip install -e ".[web,cli,dev]"
+pytest tests/ -q
 ```
 
 Minimum required env:
@@ -93,28 +100,26 @@ shorts/
   cli.py      — Typer CLI entry point
 ```
 
-The pipeline uses a lease model: each step acquires a lease before executing. On crash the lease expires and the step can be retried by any runner. The HITL gate blocks execution at configurable checkpoints until a human approves the artifact in the web UI.
+Each step acquires a SQLite-backed lease before executing. If a runner crashes, the lease expires after a timeout and another runner can pick the step up. Human-in-the-loop checkpoints pause execution until the artifact is approved.
 
-**Requirements:** Python 3.11+, ffmpeg, OpenRouter API key (or compatible LLM endpoint).
+**Requirements:** Python 3.11+, ffmpeg, and an LLM API key (OpenRouter by default).
 
 ## Roadmap
 
-What's planned or in progress — roughly in priority order:
+In rough priority order:
 
 - [ ] Real YouTube Data API v3 wiring in `shorts/nodes/upload_yt.py`
-- [ ] End-to-end integration test with real ffmpeg + Pexels sandbox
-- [ ] HITL gates surfaced in web UI (currently approval is DB-only via CLI)
-- [ ] Manual Reconciliation Gate — `shorts-factory recon` for crash recovery review
-- [ ] Sources layer — ingestion pipeline from RSS / YouTube channel → `idea_candidates`
+- [ ] End-to-end integration test with real ffmpeg and Pexels
+- [ ] Human-in-the-loop approval surfaced in the web UI (currently only DB / CLI)
+- [ ] Crash-recovery reconciliation flow for partially-completed uploads
+- [ ] Idea ingestion sources (RSS, YouTube channel feeds)
 - [ ] Additional LLM providers (Anthropic native, local Ollama)
 - [ ] Additional TTS providers (ElevenLabs, Kokoro)
 - [ ] GitHub Actions CI
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for dev setup and what help is most needed right now.
-
-PRs welcome. Issues welcome. If you're just exploring the architecture, the `specs/` directory has the design docs.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for dev setup and the areas where help is most useful. Issues and PRs are welcome. The design notes live under `specs/`.
 
 ## License
 
