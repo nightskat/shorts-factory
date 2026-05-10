@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Pipeline — Shorts Factory{% endblock %}
+{% block content %}
+<h1>Pipeline</h1>
+
+{% if jobs %}
+{% for job in jobs %}
+<div class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+    <div>
+      <strong>{{ job.title }}</strong>
+      <span class="env-key" style="margin-left:0.5rem;">{{ job.id[:8] }}…</span>
+    </div>
+    <span class="badge badge-{{ job.status }}">{{ job.status }}</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Bước</th>
+        <th>Trạng thái</th>
+        <th>Output</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for step in steps %}
+    {% set sr = step_results.get(job.id, {}).get(step) %}
+    <tr>
+      <td class="env-key">{{ step }}</td>
+      <td>
+        {% if sr %}
+        <span class="badge badge-{{ sr.status }}">{{ sr.status }}</span>
+        {% else %}
+        <span class="badge badge-pending">pending</span>
+        {% endif %}
+      </td>
+      <td class="env-key" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+        {{ sr.output_path if sr and sr.output_path else '—' }}
+      </td>
+      <td>
+        {% if not sr or sr.status in ('pending', 'failed') %}
+        <form method="post" action="/pipeline/run" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="job_id" value="{{ job.id }}">
+          <input type="hidden" name="step_name" value="{{ step }}">
+          <button type="submit" class="btn btn-sm">Chạy</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+{% else %}
+<div class="card">
+  <p style="color:#666;font-size:0.875rem;">Chưa có job nào. Tạo job trong tab <a href="/ideas">Ideas</a> trước.</p>
+</div>
+{% endif %}
+{% endblock %}

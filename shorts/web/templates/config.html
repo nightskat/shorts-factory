@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Config — Shorts Factory{% endblock %}
+{% block content %}
+<h1>Config</h1>
+
+<div class="card">
+  <h2>Environment variables</h2>
+  <p style="font-size:0.8rem;color:#666;margin-bottom:1rem;">
+    Chỉ hiển thị biến <code>SHORTS_*</code>, <code>LLM_*</code>, <code>TTS_*</code>.
+    Giá trị chứa "key", "token", "secret", "pass" được ẩn.
+  </p>
+  {% if env_vars %}
+  <table>
+    <thead>
+      <tr><th>Biến</th><th>Giá trị</th></tr>
+    </thead>
+    <tbody>
+    {% for key, val in env_vars %}
+      <tr>
+        <td class="env-key">{{ key }}</td>
+        <td class="env-val">{{ val }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#666;font-size:0.875rem;">Không có biến môi trường nào được cấu hình.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Database</h2>
+  <table>
+    <tbody>
+      <tr><td class="env-key">DB_PATH</td><td class="env-val">{{ db_path }}</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
