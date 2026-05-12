@@ -18,11 +18,17 @@ LEASE_STALE_SEC = 120
 def get_lease_owner() -> str:
     return f"{os.getpid()}@{socket.gethostname()}"
 
+SENSITIVE_KEYWORDS = ["KEY", "SECRET", "TOKEN", "PASSWORD", "API"]
+
 def snapshot_execution_context(job_id: str, extra_params: dict = None) -> str:
     # Capture all SHORTS_* and relevant provider env vars
-    env_snapshot = {k: v for k, v in os.environ.items() 
-                    if k.startswith("SHORTS_") or k.startswith("LLM_") or k.startswith("TTS_")}
-    
+    env_snapshot = {}
+    for k, v in os.environ.items():
+        if k.startswith("SHORTS_") or k.startswith("LLM_") or k.startswith("TTS_"):
+            if any(kw in k.upper() for kw in SENSITIVE_KEYWORDS):
+                env_snapshot[k] = "***MASKED***"
+            else:
+                env_snapshot[k] = v
     snapshot = {
         "job_id": job_id,
         "timestamp": str(datetime.now()),

@@ -155,3 +155,15 @@ def test_ideas_post_creates_job(client, tmp_path, monkeypatch):
     assert len(rows) == 1
     assert rows[0][0] == "My video idea"
     assert rows[0][1] == "draft"
+
+
+def test_config_endpoint_masks_secrets(client, auth_session):
+    os.environ["OPENAI_API_KEY"] = "sk-supersecret123"
+    os.environ["SHORTS_UI_COLOR"] = "blue"
+
+    response = client.get("/config", cookies=auth_session)
+    assert response.status_code == 200
+
+    # Check that template received masked value
+    assert "sk-supersecret123" not in response.text
+    assert "***MASKED***" in response.text

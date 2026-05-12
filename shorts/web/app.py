@@ -298,6 +298,7 @@ async def voice_post(
 @app.get("/config", response_class=HTMLResponse)
 async def config_get(request: Request, session: str = Depends(require_auth)):
     """Show masked environment variable values relevant to Shorts Factory."""
+    from shorts.config import SENSITIVE_KEYWORDS
     import os
 
     env_vars = {}
@@ -306,8 +307,10 @@ async def config_get(request: Request, session: str = Depends(require_auth)):
             key.startswith(prefix)
             for prefix in ("SHORTS_", "LLM_", "TTS_", "OPENAI_", "ANTHROPIC_", "GOOGLE_")
         ):
-            masked = val[:4] + "****" if len(val) > 4 else "****"
-            env_vars[key] = masked
+            if any(kw in key.upper() for kw in SENSITIVE_KEYWORDS):
+                env_vars[key] = "***MASKED***"
+            else:
+                env_vars[key] = val
 
     csrf = get_csrf_token(session)
     return templates.TemplateResponse(
