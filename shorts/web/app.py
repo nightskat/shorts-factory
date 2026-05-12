@@ -7,6 +7,7 @@ is stored in the SQLite database at DB_PATH. Uses HttpOnly session cookie
 and signed CSRF tokens (itsdangerous) for security.
 """
 
+import asyncio
 import json
 import sqlite3
 import uuid
@@ -261,14 +262,20 @@ def _run_step(job_id: str, step_name: str, db_conn: sqlite3.Connection) -> dict:
 @app.get("/voice", response_class=HTMLResponse)
 async def voice_get(request: Request, session: str = Depends(require_auth)):
     """Show approved voice scripts."""
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    try:
-        approved_scripts = [dict(r) for r in conn.execute(
-            "SELECT id, script_body, approved_at FROM approved_scripts ORDER BY approved_at DESC"
-        ).fetchall()]
-    finally:
-        conn.close()
+
+    def _fetch_scripts():
+        # Open and close the connection entirely within the thread
+        # to ensure the sqlite3 connection object is never shared across threads.
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.row_factory = sqlite3.Row
+        try:
+            return [dict(r) for r in conn.execute(
+                "SELECT id, script_body, approved_at FROM approved_scripts ORDER BY approved_at DESC"
+            ).fetchall()]
+        finally:
+            conn.close()
+
+    approved_scripts = await asyncio.to_thread(_fetch_scripts)
 
     csrf = get_csrf_token(session)
     return templates.TemplateResponse(
