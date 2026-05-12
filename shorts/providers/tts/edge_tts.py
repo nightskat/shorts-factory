@@ -48,9 +48,6 @@ class EdgeTTSProvider(TTSProvider):
         List available voices for Edge-TTS.
         """
         try:
-            # edge_tts.list_voices() can be used directly but it is async in some versions
-            # and returns a list in others. Let's assume we need to run it in asyncio
-            # if it's a coroutine.
             voices_coro = edge_tts.list_voices()
             if asyncio.iscoroutine(voices_coro):
                 raw_voices = asyncio.run(voices_coro)
