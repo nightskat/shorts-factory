@@ -6,21 +6,8 @@ import pytest
 from shorts.nodes.render import run
 
 
-SCHEMA = """
-CREATE TABLE step_results (
-    job_id TEXT, step_name TEXT, status TEXT,
-    output_path TEXT, output_checksum TEXT, error_msg TEXT,
-    PRIMARY KEY (job_id, step_name)
-)
-"""
 
 
-@pytest.fixture
-def memory_db():
-    conn = sqlite3.connect(":memory:")
-    conn.execute(SCHEMA)
-    yield conn
-    conn.close()
 
 
 def test_render_placeholder_clips(memory_db, tmp_path):
