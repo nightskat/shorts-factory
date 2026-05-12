@@ -6,23 +6,6 @@ import pytest
 from shorts.nodes.render import run
 
 
-SCHEMA = """
-CREATE TABLE step_results (
-    job_id TEXT, step_name TEXT, status TEXT,
-    output_path TEXT, output_checksum TEXT, error_msg TEXT,
-    PRIMARY KEY (job_id, step_name)
-)
-"""
-
-
-@pytest.fixture
-def memory_db():
-    conn = sqlite3.connect(":memory:")
-    conn.execute(SCHEMA)
-    yield conn
-    conn.close()
-
-
 def test_render_placeholder_clips(memory_db, tmp_path):
     job_id = "job_render_001"
 
@@ -44,7 +27,7 @@ def test_render_placeholder_clips(memory_db, tmp_path):
         [
             (job_id, "clips", "done", str(clips_file)),
             (job_id, "tts", "done", str(tts_file)),
-        ]
+        ],
     )
     memory_db.commit()
 
@@ -77,7 +60,7 @@ def test_render_uses_bgm_mix_audio_when_available(memory_db, tmp_path):
         [
             (job_id, "clips", "done", str(clips_file)),
             (job_id, "bgm_mix", "done", str(mixed_file)),
-        ]
+        ],
     )
     memory_db.commit()
 

@@ -2,12 +2,14 @@ import pytest
 from typing import Any, Dict
 from unittest.mock import MagicMock
 
+
 @pytest.fixture
 def media_dir(tmp_path):
     """Fixture providing a temporary empty directory for media files."""
     media = tmp_path / "media"
     media.mkdir()
     return str(media)
+
 
 @pytest.fixture
 def fake_execution_context() -> Dict[str, Any]:
@@ -18,8 +20,9 @@ def fake_execution_context() -> Dict[str, Any]:
         "script": "This is a test script.",
         "voice_id": "test_voice",
         "status": "pending",
-        "metadata": {}
+        "metadata": {},
     }
+
 
 @pytest.fixture
 def mock_llm_factory():
@@ -29,3 +32,15 @@ def mock_llm_factory():
     mock_provider.generate.return_value = "Mocked LLM response"
     mock_factory.get_provider.return_value = mock_provider
     return mock_factory
+
+
+import sqlite3
+from shorts.db import SCHEMA
+
+
+@pytest.fixture
+def memory_db():
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(SCHEMA)
+    yield conn
+    conn.close()
