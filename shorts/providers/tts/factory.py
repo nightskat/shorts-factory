@@ -1,5 +1,5 @@
 from typing import Any
-from shorts.providers.tts.base import TTSProvider, ProviderError
+from shorts.providers.tts.base import TTSProvider
 from shorts.providers.tts.edge_tts import EdgeTTSProvider
 
 def get_tts_provider(provider_id: str, env: dict[str, Any]) -> TTSProvider:
