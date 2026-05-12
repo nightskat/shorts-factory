@@ -245,7 +245,7 @@ def _run_step(job_id: str, step_name: str, db_conn: sqlite3.Connection) -> dict:
 
 
 @app.get("/voice", response_class=HTMLResponse)
-async def voice_get(request: Request, session: str = Depends(require_auth)):
+def voice_get(request: Request, session: str = Depends(require_auth)):
     """Show approved voice scripts."""
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row

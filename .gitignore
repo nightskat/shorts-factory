@@ -33,3 +33,4 @@ docs/build-log.md
 stdout.txt
 stderr.txt
 reproduce_leak.py
+venv/
