@@ -4,8 +4,28 @@ import os
 import json
 import hashlib
 import sqlite3
+import urllib.request
+import concurrent.futures
 from typing import Any
 from shorts.nodes import StepResult
+
+
+def _process_scene(i: int, scene: dict, job_id: str, clips_dir: str, pexels: Any) -> dict:
+    description = scene.get("description", "")
+    duration = scene.get("duration_seconds", 5)
+
+    if pexels:
+        results = pexels.search(description, per_page=1)
+        # The PexelsClipsProvider returns a list of dicts, each with a 'url' key
+        video_url = results[0]["url"]
+        clip_path = os.path.join(clips_dir, f"{job_id}_clip_{i}.mp4")
+        urllib.request.urlretrieve(video_url, clip_path)
+    else:
+        clip_path = os.path.join(clips_dir, f"{job_id}_clip_{i}.txt")
+        with open(clip_path, "w", encoding="utf-8") as f:
+            f.write(description)
+
+    return {"clip_path": clip_path, "duration_seconds": duration}
 
 
 def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connection, services: dict[str, Any]) -> StepResult:
@@ -37,24 +57,13 @@ def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connect
     os.makedirs(clips_dir, exist_ok=True)
 
     pexels = services.get("pexels")
-    clip_manifest = []
 
-    for i, scene in enumerate(scenes):
-        description = scene.get("description", "")
-        duration = scene.get("duration_seconds", 5)
-
-        if pexels:
-            result = pexels.search(description, per_page=1)
-            video_url = result["videos"][0]["video_files"][0]["link"]
-            clip_path = os.path.join(clips_dir, f"{job_id}_clip_{i}.mp4")
-            import urllib.request
-            urllib.request.urlretrieve(video_url, clip_path)
-        else:
-            clip_path = os.path.join(clips_dir, f"{job_id}_clip_{i}.txt")
-            with open(clip_path, "w", encoding="utf-8") as f:
-                f.write(description)
-
-        clip_manifest.append({"clip_path": clip_path, "duration_seconds": duration})
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [
+            executor.submit(_process_scene, i, scene, job_id, clips_dir, pexels)
+            for i, scene in enumerate(scenes)
+        ]
+        clip_manifest = [f.result() for f in futures]
 
     final_path = os.path.join(clips_dir, f"{job_id}_clips.json")
     tmp_path = final_path + ".tmp"
