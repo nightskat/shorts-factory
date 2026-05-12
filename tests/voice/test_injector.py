@@ -11,6 +11,34 @@ def test_format_few_shot_multiple():
     assert "### EXAMPLE START ###\nExample B\n### EXAMPLE END ###" in result
     assert result.index("Example A") < result.index("Example B")
 
+def test_format_few_shot_single():
+    examples = ["Single example"]
+    result = format_few_shot(examples)
+    expected = "### EXAMPLE START ###\nSingle example\n### EXAMPLE END ###"
+    assert result == expected
+
+def test_format_few_shot_whitespace():
+    examples = ["  Example with whitespace  "]
+    result = format_few_shot(examples)
+    expected = "### EXAMPLE START ###\nExample with whitespace\n### EXAMPLE END ###"
+    assert result == expected
+
+def test_format_few_shot_newlines():
+    examples = ["Line 1\nLine 2"]
+    result = format_few_shot(examples)
+    expected = "### EXAMPLE START ###\nLine 1\nLine 2\n### EXAMPLE END ###"
+    assert result == expected
+
+def test_format_few_shot_exact_output():
+    examples = ["b", "a"]
+    result = format_few_shot(examples)
+    expected = (
+        "### EXAMPLE START ###\na\n### EXAMPLE END ###"
+        "\n\n"
+        "### EXAMPLE START ###\nb\n### EXAMPLE END ###"
+    )
+    assert result == expected
+
 def test_inject_no_placeholder():
     base = "System prompt."
     examples = ["Ex"]
