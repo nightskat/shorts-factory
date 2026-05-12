@@ -12,13 +12,11 @@ import json
 import sqlite3
 import typer
 
-from pathlib import Path
 from shorts.config import DB_PATH
 from shorts.db import init_db
 from shorts.pipeline import Pipeline
 
 app = typer.Typer(help="Shorts Factory CLI")
-
 
 @app.command()
 def serve(
@@ -30,7 +28,6 @@ def serve(
     from shorts.web.app import app as web_app
 
     uvicorn.run(web_app, host=host, port=port)
-
 
 @app.command()
 def run(
@@ -89,7 +86,6 @@ def run(
     finally:
         conn.close()
 
-
 @app.command()
 def step(
     action: str = typer.Argument(..., help="Action: reset"),
@@ -115,7 +111,6 @@ def step(
     else:
         typer.echo(f"Unknown action: {action}", err=True)
         raise typer.Exit(1)
-
 
 @app.command()
 def voice(
@@ -144,7 +139,6 @@ def voice(
     else:
         typer.echo(f"Unknown action: {action}", err=True)
         raise typer.Exit(1)
-
 
 if __name__ == "__main__":
     app()
