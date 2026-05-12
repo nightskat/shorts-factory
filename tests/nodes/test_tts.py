@@ -5,25 +5,6 @@ from unittest.mock import MagicMock, patch
 
 from shorts.nodes.tts import run
 
-@pytest.fixture
-def memory_db():
-    conn = sqlite3.connect(":memory:")
-    conn.execute(
-        """
-        CREATE TABLE step_results (
-            job_id TEXT,
-            step_name TEXT,
-            status TEXT,
-            output_path TEXT,
-            output_checksum TEXT,
-            error_msg TEXT,
-            started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            completed_at TIMESTAMP
-        )
-        """
-    )
-    yield conn
-    conn.close()
 
 @patch("shorts.nodes.tts.get_tts_provider")
 def test_tts_node_success(mock_get_provider, memory_db, tmp_path):

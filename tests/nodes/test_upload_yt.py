@@ -4,31 +4,9 @@ import pytest
 from shorts.nodes.upload_yt import run
 
 
-STEP_SCHEMA = """
-CREATE TABLE step_results (
-    job_id TEXT, step_name TEXT, status TEXT,
-    output_path TEXT, output_checksum TEXT, error_msg TEXT,
-    PRIMARY KEY (job_id, step_name)
-)
-"""
-
-UPLOAD_SCHEMA = """
-CREATE TABLE youtube_uploads (
-    job_id TEXT PRIMARY KEY,
-    idempotency_key TEXT,
-    status TEXT,
-    video_id TEXT
-)
-"""
 
 
-@pytest.fixture
-def memory_db():
-    conn = sqlite3.connect(":memory:")
-    conn.execute(STEP_SCHEMA)
-    conn.execute(UPLOAD_SCHEMA)
-    yield conn
-    conn.close()
+
 
 
 def test_upload_yt_first_run_simulated(memory_db, tmp_path):
