@@ -221,6 +221,20 @@ def _run_step(job_id: str, step_name: str, db_conn: sqlite3.Connection) -> dict:
     """
     import importlib
 
+    ALLOWED_STEPS = {
+        "idea_gen",
+        "tts",
+        "bgm_mix",
+        "scenes",
+        "clips",
+        "render",
+        "thumbnail",
+        "qa_check",
+        "upload_yt"
+    }
+    if step_name not in ALLOWED_STEPS:
+        return {"status": "error", "msg": "Invalid step_name"}
+
     node = importlib.import_module(f"shorts.nodes.{step_name}")
     row = db_conn.execute(
         "SELECT execution_context FROM jobs WHERE id=?", (job_id,)
