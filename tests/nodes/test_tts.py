@@ -5,25 +5,6 @@ from unittest.mock import MagicMock, patch
 
 from shorts.nodes.tts import run
 
-@pytest.fixture
-def memory_db():
-    conn = sqlite3.connect(":memory:")
-    conn.execute(
-        """
-        CREATE TABLE step_results (
-            job_id TEXT,
-            step_name TEXT,
-            status TEXT,
-            output_path TEXT,
-            output_checksum TEXT,
-            error_msg TEXT,
-            started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            completed_at TIMESTAMP
-        )
-        """
-    )
-    yield conn
-    conn.close()
 
 @patch("shorts.nodes.tts.get_tts_provider")
 def test_tts_node_success(mock_get_provider, memory_db, tmp_path):
@@ -32,7 +13,7 @@ def test_tts_node_success(mock_get_provider, memory_db, tmp_path):
     mock_get_provider.return_value = mock_provider
 
     job_id = "test_job_123"
-    
+
     # Create a fake script file
     script_content = "Hello, world!"
     script_path = tmp_path / f"{job_id}_script.txt"
@@ -41,7 +22,7 @@ def test_tts_node_success(mock_get_provider, memory_db, tmp_path):
     # Insert fake idea_gen step output
     memory_db.execute(
         "INSERT INTO step_results (job_id, step_name, status, output_path) VALUES (?, ?, ?, ?)",
-        (job_id, "idea_gen", "done", str(script_path))
+        (job_id, "idea_gen", "done", str(script_path)),
     )
     memory_db.commit()
 
@@ -50,39 +31,39 @@ def test_tts_node_success(mock_get_provider, memory_db, tmp_path):
         with open(output_path, "wb") as f:
             f.write(b"fake audio data")
         return output_path
-    
+
     mock_provider.synthesize.side_effect = mock_synthesize
 
     execution_context = {
         "env": {
             "TTS_PROVIDER": "test-provider",
             "TTS_VOICE": "test-voice",
-            "TTS_RATE": "+10%"
+            "TTS_RATE": "+10%",
         },
-        "workspace_dir": str(tmp_path)
+        "workspace_dir": str(tmp_path),
     }
 
     result = run(job_id, execution_context, memory_db, {})
 
     assert result.status == "done"
-    assert result.output_path == os.path.join(tmp_path, "data", "audio", f"{job_id}_tts.mp3")
+    assert result.output_path == os.path.join(
+        tmp_path, "data", "audio", f"{job_id}_tts.mp3"
+    )
     assert os.path.exists(result.output_path)
     assert result.output_checksum is not None
-    
+
     # Check if provider was called with correct arguments
     mock_provider.synthesize.assert_called_once_with(
         text=script_content,
         output_path=result.output_path + ".tmp",
         voice="test-voice",
-        rate="+10%"
+        rate="+10%",
     )
+
 
 def test_tts_node_missing_idea_gen(memory_db, tmp_path):
     job_id = "test_job_456"
-    execution_context = {
-        "env": {},
-        "workspace_dir": str(tmp_path)
-    }
+    execution_context = {"env": {}, "workspace_dir": str(tmp_path)}
 
     result = run(job_id, execution_context, memory_db, {})
 

@@ -6,23 +6,6 @@ from unittest.mock import patch, MagicMock
 from shorts.nodes.bgm_mix import run
 
 
-SCHEMA = """
-CREATE TABLE step_results (
-    job_id TEXT, step_name TEXT, status TEXT,
-    output_path TEXT, output_checksum TEXT, error_msg TEXT,
-    PRIMARY KEY (job_id, step_name)
-)
-"""
-
-
-@pytest.fixture
-def memory_db():
-    conn = sqlite3.connect(":memory:")
-    conn.execute(SCHEMA)
-    yield conn
-    conn.close()
-
-
 def test_bgm_mix_skipped_when_no_bgm_path(memory_db, tmp_path):
     job_id = "job_bgm_001"
     execution_context = {"env": {}, "workspace_dir": str(tmp_path)}
@@ -49,7 +32,7 @@ def test_bgm_mix_success(memory_db, tmp_path):
 
     memory_db.execute(
         "INSERT INTO step_results (job_id, step_name, status, output_path) VALUES (?, ?, ?, ?)",
-        (job_id, "tts", "done", str(tts_file))
+        (job_id, "tts", "done", str(tts_file)),
     )
     memory_db.commit()
 

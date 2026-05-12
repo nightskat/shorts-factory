@@ -6,23 +6,6 @@ from unittest.mock import patch, MagicMock
 from shorts.nodes.scenes import run
 
 
-SCHEMA = """
-CREATE TABLE step_results (
-    job_id TEXT, step_name TEXT, status TEXT,
-    output_path TEXT, output_checksum TEXT, error_msg TEXT,
-    PRIMARY KEY (job_id, step_name)
-)
-"""
-
-
-@pytest.fixture
-def memory_db():
-    conn = sqlite3.connect(":memory:")
-    conn.execute(SCHEMA)
-    yield conn
-    conn.close()
-
-
 def test_scenes_success(memory_db, tmp_path):
     job_id = "job_scenes_001"
 
@@ -31,7 +14,7 @@ def test_scenes_success(memory_db, tmp_path):
 
     memory_db.execute(
         "INSERT INTO step_results (job_id, step_name, status, output_path) VALUES (?, ?, ?, ?)",
-        (job_id, "idea_gen", "done", str(script_file))
+        (job_id, "idea_gen", "done", str(script_file)),
     )
     memory_db.commit()
 
@@ -67,7 +50,7 @@ def test_scenes_invalid_json_from_llm(memory_db, tmp_path):
 
     memory_db.execute(
         "INSERT INTO step_results (job_id, step_name, status, output_path) VALUES (?, ?, ?, ?)",
-        (job_id, "idea_gen", "done", str(script_file))
+        (job_id, "idea_gen", "done", str(script_file)),
     )
     memory_db.commit()
 
@@ -83,7 +66,9 @@ def test_scenes_invalid_json_from_llm(memory_db, tmp_path):
         result = run(job_id, execution_context, memory_db, {})
 
     assert result.status == "error"
-    assert "invalid JSON" in result.error_msg.lower() or "json" in result.error_msg.lower()
+    assert (
+        "invalid JSON" in result.error_msg.lower() or "json" in result.error_msg.lower()
+    )
 
 
 def test_scenes_missing_idea_gen(memory_db, tmp_path):
