@@ -1,6 +1,5 @@
 # openrouter.py — OpenRouter HTTP LLM provider
 # Calls https://openrouter.ai/api/v1/chat/completions with requests.
-import os
 import requests
 from shorts.providers.llm.base import LLMProvider, ProviderError
 

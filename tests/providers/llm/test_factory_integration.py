@@ -6,7 +6,7 @@ from shorts.providers.llm.base import LLMProvider
 @pytest.mark.parametrize("provider_id", ["openrouter", "claude-cli", "codex-cli"])
 def test_factory_returns_valid_provider(provider_id):
     # Mock initialization to avoid env var requirements or CLI probing
-    with patch("shorts.providers.llm.openrouter.os.getenv", return_value="fake-key"), \
+    with patch("os.environ.get", return_value="fake-key"), \
          patch("shorts.providers.llm.claude_cli.run_cli_command", return_value="version 1.0"), \
          patch("shorts.providers.llm.codex_cli.run_cli_command", return_value="version 1.0"):
         
