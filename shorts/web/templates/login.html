@@ -29,9 +29,9 @@
 <div class="login-box">
   <h1>Shorts Factory</h1>
   {% if error %}
-  <div class="error">{{ error }}</div>
+  <div class="error" role="alert">{{ error }}</div>
   {% endif %}
-  <form method="post" action="/login">
+  <form method="post" action="/login" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').textContent = 'Đang đăng nhập...';">
     <label for="token">Auth token</label>
     <input type="password" id="token" name="token" autofocus required placeholder="Dán token từ terminal">
     <button type="submit">Đăng nhập</button>
