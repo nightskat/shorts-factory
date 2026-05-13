@@ -5,7 +5,7 @@
 
 <div class="card">
   <h2>Thêm approved script</h2>
-  <form method="post" action="/voice">
+  <form method="post" action="/voice" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').textContent = 'Đang thêm...';">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <div class="form-group">
       <label for="script_body">Nội dung script</label>
