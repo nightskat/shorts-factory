@@ -50,18 +50,21 @@ def get_csrf_token(session_token: str) -> str:
     return _signer.dumps({"csrf": 1, "s": session_token[:8]})
 
 
-def verify_csrf_token(token: str) -> bool:
+def verify_csrf_token(token: str, session_token: str) -> bool:
     """Validate a CSRF token produced by get_csrf_token().
 
     Args:
         token: The token from the hidden form field.
+        session_token: The raw session cookie value to match against the token.
 
     Returns:
-        True when the signature is valid and the token is younger than 3600 s.
+        True when the signature is valid, the token is younger than 3600 s,
+        and the token is tied to the provided session_token.
     """
     try:
-        _signer.loads(token, max_age=3600)
-        return True
+        data = _signer.loads(token, max_age=3600)
+        # Security: Prevent CSRF token fixation/bypass by checking it matches the current session
+        return data.get("s") == session_token[:8]
     except BadSignature:
         return False
 
@@ -83,6 +86,7 @@ def require_auth(request: Request) -> str:
         expected sha256 digest of the startup auth token.
     """
     session = request.cookies.get("session")
-    if not session or session != _session_value():
+    # Security: Use secrets.compare_digest to prevent timing attacks on session validation
+    if not session or not secrets.compare_digest(session, _session_value()):
         raise HTTPException(status_code=401, detail="Xác thực thất bại")
     return session

@@ -67,8 +67,10 @@ async def login_post(request: Request, token: str = Form(...)):
     """
     import shorts.web.auth as _auth_mod
     import hashlib
+    import secrets
 
-    if token != _auth_mod._AUTH_TOKEN:
+    # Security: Use secrets.compare_digest to prevent timing attacks on login token validation
+    if not secrets.compare_digest(token, _auth_mod._AUTH_TOKEN):
         csrf = get_csrf_token("login")
         return templates.TemplateResponse(
             request,
@@ -134,7 +136,7 @@ async def ideas_post(
 
     Raises HTTP 400 if CSRF token is invalid.
     """
-    if not verify_csrf_token(csrf_token):
+    if not verify_csrf_token(csrf_token, session):
         raise HTTPException(status_code=400, detail="CSRF token không hợp lệ")
 
     job_id = str(uuid.uuid4())
@@ -191,7 +193,7 @@ async def pipeline_run(
     """
     body = await request.json()
     csrf_token = body.get("csrf_token", "")
-    if not verify_csrf_token(csrf_token):
+    if not verify_csrf_token(csrf_token, session):
         raise HTTPException(status_code=400, detail="CSRF token không hợp lệ")
 
     job_id = body.get("job_id")
@@ -296,7 +298,7 @@ async def voice_post(
 
     Raises HTTP 400 if CSRF token is invalid.
     """
-    if not verify_csrf_token(csrf_token):
+    if not verify_csrf_token(csrf_token, session):
         raise HTTPException(status_code=400, detail="CSRF token không hợp lệ")
 
     conn = sqlite3.connect(str(DB_PATH))
