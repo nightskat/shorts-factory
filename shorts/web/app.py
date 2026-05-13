@@ -21,7 +21,6 @@ from fastapi.templating import Jinja2Templates
 from shorts.config import DB_PATH
 from shorts.db import init_db
 from shorts.web.auth import (
-    _AUTH_TOKEN,
     generate_startup_token,
     get_csrf_token,
     require_auth,
@@ -35,10 +34,10 @@ TEMPLATES_DIR: Path = Path(__file__).parent / "templates"
 async def lifespan(app: FastAPI):
     """Initialize DB and print startup auth token before serving requests."""
     init_db(str(DB_PATH))
-    token = generate_startup_token()
+    generate_startup_token()
     import shorts.web.auth as _auth_mod
     print(f"\n[Shorts Factory] Auth token: {_auth_mod._AUTH_TOKEN}")
-    print(f"[Shorts Factory] Login at: http://127.0.0.1:8765/login\n")
+    print("[Shorts Factory] Login at: http://127.0.0.1:8765/login\n")
     yield
 
 
