@@ -5,7 +5,7 @@
 
 <div class="card">
   <h2>Tạo job mới</h2>
-  <form method="post" action="/ideas">
+  <form method="post" action="/ideas" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').textContent = 'Đang tạo...';">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <div class="form-group">
       <label for="title">Tiêu đề</label>
