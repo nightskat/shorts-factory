@@ -105,8 +105,12 @@ async def root():
 
 
 @app.get("/ideas", response_class=HTMLResponse)
-async def ideas_get(request: Request, session: str = Depends(require_auth)):
-    """List all jobs."""
+def ideas_get(request: Request, session: str = Depends(require_auth)):
+    """List all jobs.
+
+    ⚡ Bolt: Changed to `def` so FastAPI automatically offloads blocking SQLite
+    operations to its threadpool, preventing asyncio event loop blocking.
+    """
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     try:
@@ -124,7 +128,7 @@ async def ideas_get(request: Request, session: str = Depends(require_auth)):
 
 
 @app.post("/ideas")
-async def ideas_post(
+def ideas_post(
     request: Request,
     session: str = Depends(require_auth),
     title: str = Form(...),
@@ -133,6 +137,9 @@ async def ideas_post(
     """Create a new job with status=draft.
 
     Raises HTTP 400 if CSRF token is invalid.
+
+    ⚡ Bolt: Changed to `def` so FastAPI automatically offloads blocking SQLite
+    operations to its threadpool, preventing asyncio event loop blocking.
     """
     if not verify_csrf_token(csrf_token):
         raise HTTPException(status_code=400, detail="CSRF token không hợp lệ")
@@ -157,8 +164,12 @@ async def ideas_post(
 
 
 @app.get("/pipeline", response_class=HTMLResponse)
-async def pipeline_get(request: Request, session: str = Depends(require_auth)):
-    """Show pipeline status for all jobs."""
+def pipeline_get(request: Request, session: str = Depends(require_auth)):
+    """Show pipeline status for all jobs.
+
+    ⚡ Bolt: Changed to `def` so FastAPI automatically offloads blocking SQLite
+    operations to its threadpool, preventing asyncio event loop blocking.
+    """
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     try:
@@ -199,12 +210,17 @@ async def pipeline_run(
     if not job_id or not step_name:
         raise HTTPException(status_code=400, detail="Thiếu job_id hoặc step_name")
 
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    try:
-        result = _run_step(job_id, step_name, conn)
-    finally:
-        conn.close()
+    # ⚡ Bolt: Offloading synchronous blocking operations to threadpool
+    # because this endpoint must remain `async def` to use `await request.json()`
+    def _run_step_blocking():
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.row_factory = sqlite3.Row
+        try:
+            return _run_step(job_id, step_name, conn)
+        finally:
+            conn.close()
+
+    result = await asyncio.to_thread(_run_step_blocking)
 
     return JSONResponse(result)
 
@@ -260,22 +276,21 @@ def _run_step(job_id: str, step_name: str, db_conn: sqlite3.Connection) -> dict:
 
 
 @app.get("/voice", response_class=HTMLResponse)
-async def voice_get(request: Request, session: str = Depends(require_auth)):
-    """Show approved voice scripts."""
+def voice_get(request: Request, session: str = Depends(require_auth)):
+    """Show approved voice scripts.
 
-    def _fetch_scripts():
-        # Open and close the connection entirely within the thread
-        # to ensure the sqlite3 connection object is never shared across threads.
-        conn = sqlite3.connect(str(DB_PATH))
-        conn.row_factory = sqlite3.Row
-        try:
-            return [dict(r) for r in conn.execute(
-                "SELECT id, script_body, approved_at FROM approved_scripts ORDER BY approved_at DESC"
-            ).fetchall()]
-        finally:
-            conn.close()
-
-    approved_scripts = await asyncio.to_thread(_fetch_scripts)
+    ⚡ Bolt: Changed to `def` so FastAPI automatically offloads blocking SQLite
+    operations to its threadpool, preventing asyncio event loop blocking.
+    This also removes the need for manual `asyncio.to_thread` boilerplate.
+    """
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    try:
+        approved_scripts = [dict(r) for r in conn.execute(
+            "SELECT id, script_body, approved_at FROM approved_scripts ORDER BY approved_at DESC"
+        ).fetchall()]
+    finally:
+        conn.close()
 
     csrf = get_csrf_token(session)
     return templates.TemplateResponse(
@@ -286,7 +301,7 @@ async def voice_get(request: Request, session: str = Depends(require_auth)):
 
 
 @app.post("/voice")
-async def voice_post(
+def voice_post(
     request: Request,
     session: str = Depends(require_auth),
     script_body: str = Form(...),
@@ -295,6 +310,9 @@ async def voice_post(
     """Add a new approved voice script.
 
     Raises HTTP 400 if CSRF token is invalid.
+
+    ⚡ Bolt: Changed to `def` so FastAPI automatically offloads blocking SQLite
+    operations to its threadpool, preventing asyncio event loop blocking.
     """
     if not verify_csrf_token(csrf_token):
         raise HTTPException(status_code=400, detail="CSRF token không hợp lệ")
