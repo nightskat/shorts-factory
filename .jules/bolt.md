@@ -1,0 +1,3 @@
+## 2025-02-27 - FastAPI Event Loop Blocking with Synchronous DB Queries
+**Learning:** In FastAPI applications, defining route handlers with `async def` makes them run directly on the main asyncio event loop thread. If these handlers contain synchronous blocking operations like `sqlite3.connect` and `conn.execute`, they will block the entire event loop, causing severe latency degradation for all concurrent requests.
+**Action:** Always define endpoints that perform synchronous DB queries as standard `def` rather than `async def`. FastAPI automatically provisions an external threadpool for `def` functions. If an endpoint must be `async def` (e.g., to `await request.json()`), explicitly offload the blocking synchronous parts using `asyncio.to_thread`.
