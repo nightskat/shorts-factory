@@ -1,4 +1,3 @@
-import pytest
 from abc import ABC
 try:
     from shorts.providers.llm import LLMProvider

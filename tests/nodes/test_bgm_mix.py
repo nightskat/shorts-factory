@@ -1,6 +1,4 @@
 import os
-import sqlite3
-import pytest
 from unittest.mock import patch, MagicMock
 
 from shorts.nodes.bgm_mix import run
