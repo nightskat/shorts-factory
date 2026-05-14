@@ -52,6 +52,10 @@ CREATE TABLE IF NOT EXISTS youtube_uploads (
     resumable_session_url TEXT,
     FOREIGN KEY (job_id) REFERENCES jobs(id)
 );
+
+-- ⚡ Bolt: Added indexes to speed up dashboard queries in app.py
+CREATE INDEX IF NOT EXISTS idx_jobs_created_at ON jobs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_approved_scripts_approved_at ON approved_scripts(approved_at DESC);
 """
 
 def init_db(db_path: str):
