@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import List, Optional
+from typing import Dict, List, Optional
 from shorts.providers.llm.base import ProviderError
 
 SAFE_ENV_KEYS = {
@@ -8,6 +8,22 @@ SAFE_ENV_KEYS = {
     "SYSTEMROOT", "COMSPEC", "PATHEXT", "APPDATA", "LOCALAPPDATA", "NO_COLOR", "CI",
     "CLAUDE_CONFIG_DIR", "CODEX_HOME"
 }
+
+def _get_filtered_env(env_allowlist: Optional[List[str]] = None) -> Dict[str, str]:
+    """Get a filtered environment dictionary based on allowed keys."""
+    allowed_keys = SAFE_ENV_KEYS.copy()
+    if env_allowlist:
+        allowed_keys.update(env_allowlist)
+
+    return {k: v for k, v in os.environ.items() if k in allowed_keys}
+
+def _handle_subprocess_error(result: subprocess.CompletedProcess) -> None:
+    """Handle non-zero exit codes from subprocess execution."""
+    if result.returncode != 0:
+        error_msg = f"CLI command failed with exit code {result.returncode}\n"
+        if result.stderr:
+            error_msg += f"Stderr: {result.stderr.strip()}"
+        raise ProviderError(error_msg)
 
 def run_cli_command(
     args: List[str],
@@ -30,11 +46,7 @@ def run_cli_command(
     Raises:
         ProviderError: If the command fails or times out.
     """
-    allowed_keys = SAFE_ENV_KEYS.copy()
-    if env_allowlist:
-        allowed_keys.update(env_allowlist)
-        
-    filtered_env = {k: v for k, v in os.environ.items() if k in allowed_keys}
+    filtered_env = _get_filtered_env(env_allowlist)
     
     try:
         result = subprocess.run(
@@ -47,11 +59,7 @@ def run_cli_command(
             check=False  # We handle check manually to provide better error messages
         )
         
-        if result.returncode != 0:
-            error_msg = f"CLI command failed with exit code {result.returncode}\n"
-            if result.stderr:
-                error_msg += f"Stderr: {result.stderr.strip()}"
-            raise ProviderError(error_msg)
+        _handle_subprocess_error(result)
             
         return result.stdout
         
