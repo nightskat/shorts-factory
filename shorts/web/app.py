@@ -36,6 +36,7 @@ async def lifespan(app: FastAPI):
     init_db(str(DB_PATH))
     generate_startup_token()
     import shorts.web.auth as _auth_mod
+
     print(f"\n[Shorts Factory] Auth token: {_auth_mod._AUTH_TOKEN}")
     print("[Shorts Factory] Login at: http://127.0.0.1:8765/login\n")
     yield
@@ -124,7 +125,7 @@ def ideas_get(request: Request, session: str = Depends(require_auth)):
 
     csrf = get_csrf_token(session)
     return templates.TemplateResponse(
-        request, "ideas.html", {"jobs": jobs, "csrf_token": csrf}
+        request, "ideas.html", {"jobs": jobs, "csrf_token": csrf, "active": "ideas"}
     )
 
 
@@ -174,12 +175,18 @@ def pipeline_get(request: Request, session: str = Depends(require_auth)):
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     try:
-        jobs = [dict(r) for r in conn.execute(
-            "SELECT id, title, status, created_at FROM jobs ORDER BY created_at DESC"
-        ).fetchall()]
-        step_results = [dict(r) for r in conn.execute(
-            "SELECT job_id, step_name, status, output_path FROM step_results"
-        ).fetchall()]
+        jobs = [
+            dict(r)
+            for r in conn.execute(
+                "SELECT id, title, status, created_at FROM jobs ORDER BY created_at DESC"
+            ).fetchall()
+        ]
+        step_results = [
+            dict(r)
+            for r in conn.execute(
+                "SELECT job_id, step_name, status, output_path FROM step_results"
+            ).fetchall()
+        ]
     finally:
         conn.close()
 
@@ -187,7 +194,12 @@ def pipeline_get(request: Request, session: str = Depends(require_auth)):
     return templates.TemplateResponse(
         request,
         "pipeline.html",
-        {"jobs": jobs, "step_results": step_results, "csrf_token": csrf},
+        {
+            "jobs": jobs,
+            "step_results": step_results,
+            "csrf_token": csrf,
+            "active": "pipeline",
+        },
     )
 
 
@@ -248,7 +260,7 @@ def _run_step(job_id: str, step_name: str, db_conn: sqlite3.Connection) -> dict:
         "render",
         "thumbnail",
         "qa_check",
-        "upload_yt"
+        "upload_yt",
     }
     if step_name not in ALLOWED_STEPS:
         return {"status": "error", "msg": "Invalid step_name"}
@@ -287,9 +299,12 @@ def voice_get(request: Request, session: str = Depends(require_auth)):
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     try:
-        approved_scripts = [dict(r) for r in conn.execute(
-            "SELECT id, script_body, approved_at FROM approved_scripts ORDER BY approved_at DESC"
-        ).fetchall()]
+        approved_scripts = [
+            dict(r)
+            for r in conn.execute(
+                "SELECT id, script_body, approved_at FROM approved_scripts ORDER BY approved_at DESC"
+            ).fetchall()
+        ]
     finally:
         conn.close()
 
@@ -297,7 +312,7 @@ def voice_get(request: Request, session: str = Depends(require_auth)):
     return templates.TemplateResponse(
         request,
         "voice.html",
-        {"approved_scripts": approved_scripts, "csrf_token": csrf},
+        {"approved_scripts": approved_scripts, "csrf_token": csrf, "active": "voice"},
     )
 
 
@@ -344,7 +359,14 @@ async def config_get(request: Request, session: str = Depends(require_auth)):
     for key, val in os.environ.items():
         if any(
             key.startswith(prefix)
-            for prefix in ("SHORTS_", "LLM_", "TTS_", "OPENAI_", "ANTHROPIC_", "GOOGLE_")
+            for prefix in (
+                "SHORTS_",
+                "LLM_",
+                "TTS_",
+                "OPENAI_",
+                "ANTHROPIC_",
+                "GOOGLE_",
+            )
         ):
             masked = val[:4] + "****" if len(val) > 4 else "****"
             env_vars[key] = masked
@@ -353,5 +375,5 @@ async def config_get(request: Request, session: str = Depends(require_auth)):
     return templates.TemplateResponse(
         request,
         "config.html",
-        {"env_vars": env_vars, "csrf_token": csrf},
+        {"env_vars": env_vars, "csrf_token": csrf, "active": "config"},
     )
