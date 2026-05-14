@@ -6,7 +6,7 @@ import hashlib
 import sqlite3
 import urllib.request
 import concurrent.futures
-from typing import Any
+from typing import Any, Optional, Tuple
 from shorts.nodes import StepResult
 
 
@@ -28,7 +28,7 @@ def _process_scene(i: int, scene: dict, job_id: str, clips_dir: str, pexels: Any
     return {"clip_path": clip_path, "duration_seconds": duration}
 
 
-def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connection, services: dict[str, Any]) -> StepResult:
+def _get_scenes_path(db_conn: sqlite3.Connection, job_id: str) -> Optional[str]:
     cursor = db_conn.cursor()
     cursor.execute(
         "SELECT output_path FROM step_results WHERE job_id = ? AND step_name = ? AND status = 'done'",
@@ -36,12 +36,30 @@ def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connect
     )
     row = cursor.fetchone()
     if not row or not row[0]:
+        return None
+    return row[0]
+
+def _save_manifest(clip_manifest: list[dict], job_id: str, clips_dir: str) -> Tuple[str, str]:
+    final_path = os.path.join(clips_dir, f"{job_id}_clips.json")
+    tmp_path = final_path + ".tmp"
+
+    encoded = json.dumps(clip_manifest, ensure_ascii=False, indent=2).encode("utf-8")
+
+    with open(tmp_path, "wb") as f:
+        f.write(encoded)
+
+    os.replace(tmp_path, final_path)
+
+    checksum = hashlib.sha256(encoded).hexdigest()
+    return final_path, checksum
+
+def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connection, services: dict[str, Any]) -> StepResult:
+    scenes_path = _get_scenes_path(db_conn, job_id)
+    if not scenes_path:
         return StepResult(
             status="error",
             error_msg="Could not find successful scenes step output for this job."
         )
-
-    scenes_path = row[0]
 
     if not os.path.exists(scenes_path):
         return StepResult(
@@ -65,17 +83,7 @@ def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connect
         ]
         clip_manifest = [f.result() for f in futures]
 
-    final_path = os.path.join(clips_dir, f"{job_id}_clips.json")
-    tmp_path = final_path + ".tmp"
-
-    encoded = json.dumps(clip_manifest, ensure_ascii=False, indent=2).encode("utf-8")
-
-    with open(tmp_path, "wb") as f:
-        f.write(encoded)
-
-    os.replace(tmp_path, final_path)
-
-    checksum = hashlib.sha256(encoded).hexdigest()
+    final_path, checksum = _save_manifest(clip_manifest, job_id, clips_dir)
 
     return StepResult(
         status="done",
