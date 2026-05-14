@@ -6,6 +6,7 @@ import hashlib
 import sqlite3
 import urllib.request
 import concurrent.futures
+import tempfile
 from typing import Any, Optional, Tuple
 from shorts.nodes import StepResult
 
@@ -41,14 +42,20 @@ def _get_scenes_path(db_conn: sqlite3.Connection, job_id: str) -> Optional[str]:
 
 def _save_manifest(clip_manifest: list[dict], job_id: str, clips_dir: str) -> Tuple[str, str]:
     final_path = os.path.join(clips_dir, f"{job_id}_clips.json")
-    tmp_path = final_path + ".tmp"
 
     encoded = json.dumps(clip_manifest, ensure_ascii=False, indent=2).encode("utf-8")
 
-    with open(tmp_path, "wb") as f:
-        f.write(encoded)
-
-    os.replace(tmp_path, final_path)
+    fd, unique_tmp_path = tempfile.mkstemp(dir=clips_dir, prefix=f"{job_id}_clips_", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(encoded)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(unique_tmp_path, final_path)
+    except Exception:
+        if os.path.exists(unique_tmp_path):
+            os.unlink(unique_tmp_path)
+        raise
 
     checksum = hashlib.sha256(encoded).hexdigest()
     return final_path, checksum
