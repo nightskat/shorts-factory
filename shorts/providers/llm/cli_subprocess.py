@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import List, Optional
+from typing import List, Optional, Dict
 from shorts.providers.llm.base import ProviderError
 
 SAFE_ENV_KEYS = {
@@ -8,6 +8,22 @@ SAFE_ENV_KEYS = {
     "SYSTEMROOT", "COMSPEC", "PATHEXT", "APPDATA", "LOCALAPPDATA", "NO_COLOR", "CI",
     "CLAUDE_CONFIG_DIR", "CODEX_HOME"
 }
+
+def _build_filtered_env(env_allowlist: Optional[List[str]] = None) -> Dict[str, str]:
+    """Build a filtered environment dictionary based on safe keys and allowlist."""
+    allowed_keys = SAFE_ENV_KEYS.copy()
+    if env_allowlist:
+        allowed_keys.update(env_allowlist)
+
+    return {k: v for k, v in os.environ.items() if k in allowed_keys}
+
+def _check_command_result(result: subprocess.CompletedProcess) -> None:
+    """Check the result of a subprocess run and raise ProviderError if it failed."""
+    if result.returncode != 0:
+        error_msg = f"CLI command failed with exit code {result.returncode}\n"
+        if result.stderr:
+            error_msg += f"Stderr: {result.stderr.strip()}"
+        raise ProviderError(error_msg)
 
 def run_cli_command(
     args: List[str],
@@ -30,11 +46,7 @@ def run_cli_command(
     Raises:
         ProviderError: If the command fails or times out.
     """
-    allowed_keys = SAFE_ENV_KEYS.copy()
-    if env_allowlist:
-        allowed_keys.update(env_allowlist)
-        
-    filtered_env = {k: v for k, v in os.environ.items() if k in allowed_keys}
+    filtered_env = _build_filtered_env(env_allowlist)
     
     try:
         result = subprocess.run(
@@ -47,12 +59,7 @@ def run_cli_command(
             check=False  # We handle check manually to provide better error messages
         )
         
-        if result.returncode != 0:
-            error_msg = f"CLI command failed with exit code {result.returncode}\n"
-            if result.stderr:
-                error_msg += f"Stderr: {result.stderr.strip()}"
-            raise ProviderError(error_msg)
-            
+        _check_command_result(result)
         return result.stdout
         
     except subprocess.TimeoutExpired as e:
