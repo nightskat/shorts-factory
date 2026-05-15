@@ -1,6 +1,4 @@
 import os
-import sqlite3
-import pytest
 
 from shorts.nodes.thumbnail import run
 

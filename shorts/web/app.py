@@ -52,6 +52,18 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 # ---------------------------------------------------------------------------
 
 
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Add defense-in-depth security headers to all HTTP responses."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     """Render login form."""
@@ -181,14 +193,33 @@ def pipeline_get(request: Request, session: str = Depends(require_auth)):
                 "SELECT id, title, status, created_at FROM jobs ORDER BY created_at DESC"
             ).fetchall()
         ]
-        step_results = [
-            dict(r)
-            for r in conn.execute(
-                "SELECT job_id, step_name, status, output_path FROM step_results"
-            ).fetchall()
-        ]
+        raw_step_results = conn.execute(
+            "SELECT job_id, step_name, status, output_path FROM step_results"
+        ).fetchall()
+
+        # Group step results by job_id and step_name for O(1) template lookup
+        step_results = {}
+        for r in raw_step_results:
+            job_id = r["job_id"]
+            if job_id not in step_results:
+                step_results[job_id] = {}
+            step_results[job_id][r["step_name"]] = dict(r)
+
     finally:
         conn.close()
+
+    # Ordered list of pipeline steps
+    steps = [
+        "idea_gen",
+        "tts",
+        "bgm_mix",
+        "scenes",
+        "clips",
+        "render",
+        "thumbnail",
+        "qa_check",
+        "upload_yt"
+    ]
 
     csrf = get_csrf_token(session)
     return templates.TemplateResponse(
@@ -197,6 +228,7 @@ def pipeline_get(request: Request, session: str = Depends(require_auth)):
         {
             "jobs": jobs,
             "step_results": step_results,
+            "steps": steps,
             "csrf_token": csrf,
             "active": "pipeline",
         },

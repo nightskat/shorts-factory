@@ -1,9 +1,6 @@
-🧹 [Refactor] Fix long function in upload_yt.py
+🧹 [Refactor] Improve maintainability of `shorts/nodes/bgm_mix.py`
 
-🎯 **What:** The `run` function in `shorts/nodes/upload_yt.py` was refactored into smaller, logically focused helper functions.
-
-💡 **Why:** Breaking down the long function improves readability, testability, and maintainability. Each helper function now encapsulates a specific step of the YouTube upload process, such as getting render output paths, checking idempotency records, and updating the database state.
-
-✅ **Verification:** I ran `ruff check` and the full test suite (`python -m pytest`). All 119 active tests successfully pass, including the specific unit tests for `upload_yt.py`. I confirmed that the original logic and safety constraints (like the idempotency check and proper SQLite connections) were strictly preserved.
-
-✨ **Result:** A much cleaner `run` function that clearly outlines the two-phase upload protocol, improving long-term codebase health.
+🎯 **What:** Broken down the long `run` function into smaller helper functions (`_get_tts_path` and `_run_ffmpeg`).
+💡 **Why:** By extracting database querying and subprocess execution into their own functions, the core `run` logic is significantly more readable and easier to maintain.
+✅ **Verification:** Verified by running `pytest tests/nodes/test_bgm_mix.py` and `ruff check shorts/nodes/bgm_mix.py`, ensuring all tests continue to pass without functionality loss.
+✨ **Result:** A cleaner and much more understandable component for audio mixing.

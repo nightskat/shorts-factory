@@ -1,6 +1,5 @@
-import json
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from shorts.providers.llm.codex_cli import CodexCLILLMProvider
 from shorts.providers.llm.base import ProviderError
 

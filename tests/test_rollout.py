@@ -1,5 +1,4 @@
 import json
-import os
 from shorts.utils.rollout import log_checkpoint
 from shorts import config
 
