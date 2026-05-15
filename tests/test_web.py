@@ -119,7 +119,6 @@ def test_ideas_post_requires_csrf(client):
 
 def test_ideas_post_creates_job(client, tmp_path, monkeypatch):
     """POST /ideas with valid auth + CSRF creates a job row in the DB."""
-    tmp_path / "test.db"
     # The fixture already patched DB_PATH; we just need the path to read from
     # Re-read where the DB is
     import shorts.config as cfg_mod
