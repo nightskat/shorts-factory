@@ -84,8 +84,21 @@ def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connect
     if not os.path.exists(clips_path):
         return StepResult(status="error", error_msg=f"Clips manifest not found at {clips_path}")
 
-    with open(clips_path, "r", encoding="utf-8") as f:
-        clip_manifest = json.load(f)
+    try:
+        with open(clips_path, "r", encoding="utf-8") as f:
+            clip_manifest = json.load(f)
+
+        if not isinstance(clip_manifest, list):
+            return StepResult(status="error", error_msg="Invalid manifest JSON: must be a list")
+
+        for idx, clip in enumerate(clip_manifest):
+            if not isinstance(clip, dict):
+                return StepResult(status="error", error_msg=f"Invalid manifest JSON: item {idx} is not a dictionary")
+            if "clip_path" not in clip:
+                return StepResult(status="error", error_msg=f"Invalid manifest JSON: item {idx} missing 'clip_path'")
+
+    except json.JSONDecodeError:
+        return StepResult(status="error", error_msg="Invalid manifest JSON")
 
     audio_path = _resolve_audio_path(cursor, job_id)
     if not audio_path:
