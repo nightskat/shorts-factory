@@ -55,6 +55,17 @@ def client(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
+def test_security_headers(client):
+    """GET /login must include security headers."""
+    resp = client.get("/login", follow_redirects=False)
+    assert resp.status_code == 200
+    assert resp.headers.get("X-Content-Type-Options") == "nosniff"
+    assert resp.headers.get("X-Frame-Options") == "DENY"
+    assert resp.headers.get("X-XSS-Protection") == "1; mode=block"
+    assert resp.headers.get("Strict-Transport-Security") == "max-age=31536000; includeSubDomains"
+    assert resp.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
+
+
 def test_unauthenticated_ideas_returns_401(client):
     """GET /ideas without session cookie must return 401."""
     resp = client.get("/ideas", follow_redirects=False)
@@ -119,7 +130,6 @@ def test_ideas_post_requires_csrf(client):
 
 def test_ideas_post_creates_job(client, tmp_path, monkeypatch):
     """POST /ideas with valid auth + CSRF creates a job row in the DB."""
-    db_path = tmp_path / "test.db"
     # The fixture already patched DB_PATH; we just need the path to read from
     # Re-read where the DB is
     import shorts.config as cfg_mod
