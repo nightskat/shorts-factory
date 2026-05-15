@@ -1,0 +1,6 @@
+🧹 [Refactor] Improve maintainability of `shorts/nodes/bgm_mix.py`
+
+🎯 **What:** Broken down the long `run` function into smaller helper functions (`_get_tts_path` and `_run_ffmpeg`).
+💡 **Why:** By extracting database querying and subprocess execution into their own functions, the core `run` logic is significantly more readable and easier to maintain.
+✅ **Verification:** Verified by running `pytest tests/nodes/test_bgm_mix.py` and `ruff check shorts/nodes/bgm_mix.py`, ensuring all tests continue to pass without functionality loss.
+✨ **Result:** A cleaner and much more understandable component for audio mixing.
