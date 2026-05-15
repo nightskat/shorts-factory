@@ -6,4 +6,4 @@
 ## 2026-05-14 - [Missing Security Headers in Web App]
 **Vulnerability:** The FastAPI application was not returning standard HTTP security headers, leaving it vulnerable to common client-side attacks like clickjacking, MIME-type sniffing, and failing to enforce HTTPS properly.
 **Learning:** Adding a generic `http` middleware in FastAPI is a simple but effective defense-in-depth approach to globally inject security headers into every HTTP response.
-**Prevention:** Always include an HTTP middleware or configure the reverse proxy to append headers like `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, `X-XSS-Protection`, and `Referrer-Policy`.
+**Prevention:** Always include an HTTP middleware or configure the reverse proxy to append headers like `Content-Security-Policy: frame-ancestors`, `X-Content-Type-Options`, `Strict-Transport-Security`, `Content-Security-Policy`, and `Referrer-Policy`.
