@@ -34,7 +34,7 @@ def serve(
 def _get_completed_steps(conn: sqlite3.Connection, job_id: str) -> set[str]:
     """Fetch the set of completed steps for a given job ID."""
     rows = conn.execute(
-        "SELECT step_name FROM step_results WHERE job_id=? AND status='done'",
+        "SELECT step_name FROM step_results WHERE job_id=? AND status IN ('done','skipped')",
         (job_id,),
     ).fetchall()
     return {r["step_name"] for r in rows}
