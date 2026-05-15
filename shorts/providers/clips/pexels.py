@@ -29,6 +29,11 @@ class PexelsClipsProvider(ClipsProvider):
         """
         Search for portrait orientation video clips on Pexels.
         """
+        timeout = kwargs.get("timeout", 30)
+        videos = self._fetch_videos(query, count, timeout)
+        return self._process_videos(videos)
+
+    def _fetch_videos(self, query: str, count: int, timeout: int) -> List[Dict[Any, Any]]:
         headers = {"Authorization": self._api_key}
         params = {
             "query": query,
@@ -36,9 +41,6 @@ class PexelsClipsProvider(ClipsProvider):
             "orientation": "portrait"
         }
         
-        # Use a reasonable timeout to prevent hanging
-        timeout = kwargs.get("timeout", 30)
-
         try:
             response = requests.get(
                 f"{self._base_url}/search", 
@@ -51,34 +53,36 @@ class PexelsClipsProvider(ClipsProvider):
                 raise ProviderError(f"Pexels API error: {response.status_code} - {response.text}")
 
             data = response.json()
-            videos = data.get("videos", [])
-            results = []
-
-            for video in videos:
-                video_files = video.get("video_files", [])
-                if not video_files:
-                    continue
-                
-                # Selection logic: prioritize HD and true portrait (width < height)
-                # Pexels video_files often have 'width', 'height', 'link', 'quality'
-                best_file = self._select_best_file(video_files)
-                
-                results.append({
-                    "id": str(video.get("id", "unknown")),
-                    "url": best_file.get("link"),
-                    "duration": float(video.get("duration", 0)),
-                    "width": best_file.get("width"),
-                    "height": best_file.get("height"),
-                    "thumbnail": video.get("image"),
-                    "provider": self.provider_id
-                })
-
-            return results
+            return data.get("videos", [])
 
         except requests.exceptions.RequestException as e:
             raise ProviderError(f"Network error during Pexels search: {str(e)}")
         except Exception as e:
             raise ProviderError(f"Unexpected error in Pexels provider: {str(e)}")
+
+    def _process_videos(self, videos: List[Dict[Any, Any]]) -> List[Dict[Any, Any]]:
+        results = []
+
+        for video in videos:
+            video_files = video.get("video_files", [])
+            if not video_files:
+                continue
+
+            # Selection logic: prioritize HD and true portrait (width < height)
+            # Pexels video_files often have 'width', 'height', 'link', 'quality'
+            best_file = self._select_best_file(video_files)
+
+            results.append({
+                "id": str(video.get("id", "unknown")),
+                "url": best_file.get("link"),
+                "duration": float(video.get("duration", 0)),
+                "width": best_file.get("width"),
+                "height": best_file.get("height"),
+                "thumbnail": video.get("image"),
+                "provider": self.provider_id
+            })
+
+        return results
 
     def _select_best_file(self, video_files: List[Dict]) -> Dict:
         """
