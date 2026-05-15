@@ -165,3 +165,63 @@ def test_ideas_post_creates_job(client, tmp_path, monkeypatch):
     assert len(rows) == 1
     assert rows[0][0] == "My video idea"
     assert rows[0][1] == "draft"
+
+# ---------------------------------------------------------------------------
+# Voice tests
+# ---------------------------------------------------------------------------
+
+def test_voice_get_unauthenticated(client):
+    """GET /voice without session cookie must return 401."""
+    resp = client.get("/voice", follow_redirects=False)
+    assert resp.status_code == 401
+
+def test_voice_get_authenticated(client, tmp_path):
+    """GET /voice with valid auth returns 200 and renders the voice page."""
+    _authenticated_client(client)
+    resp = client.get("/voice")
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers["content-type"]
+    assert "csrf_token" in resp.text
+
+def test_voice_post_requires_csrf(client):
+    """POST /voice with missing/invalid csrf_token must return 400."""
+    _authenticated_client(client)
+    resp = client.post(
+        "/voice",
+        data={"script_body": "test script", "csrf_token": "invalid-token"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 400
+
+def test_voice_post_creates_script(client, tmp_path, monkeypatch):
+    """POST /voice with valid auth + CSRF creates a script in the DB."""
+    import shorts.config as cfg_mod
+    db = str(cfg_mod.DB_PATH)
+
+    _authenticated_client(client)
+
+    # Get a valid CSRF token
+    resp = client.get("/voice")
+    assert resp.status_code == 200
+
+    import re
+    match = re.search(r'name="csrf_token"\s+value="([^"]+)"', resp.text)
+    assert match, "CSRF token not found in /voice HTML"
+    csrf = match.group(1)
+
+    # Post the script
+    resp2 = client.post(
+        "/voice",
+        data={"script_body": "My awesome voice script", "csrf_token": csrf},
+        follow_redirects=False,
+    )
+    assert resp2.status_code == 302
+    assert resp2.headers["location"] == "/voice"
+
+    # Verify DB has the script
+    conn = sqlite3.connect(db)
+    rows = conn.execute("SELECT script_body FROM approved_scripts").fetchall()
+    conn.close()
+
+    assert len(rows) == 1
+    assert rows[0][0] == "My awesome voice script"
