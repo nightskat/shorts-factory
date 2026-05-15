@@ -78,3 +78,16 @@ def test_edge_tts_list_voices_error():
         provider = EdgeTTSProvider()
         with pytest.raises(ProviderError):
             provider.list_voices()
+
+def test_edge_tts_list_voices_async_error():
+    async def fake_voices_coro():
+        # Yield invalid data that raises an exception when trying to access .get()
+        return ["invalid string data instead of dict"]
+
+    with patch("shorts.providers.tts.edge_tts.edge_tts") as mock_et:
+        mock_et.list_voices.return_value = fake_voices_coro()
+        provider = EdgeTTSProvider()
+        with pytest.raises(ProviderError) as excinfo:
+            provider.list_voices()
+
+    assert "Failed to list Edge-TTS voices" in str(excinfo.value)

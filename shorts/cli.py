@@ -18,6 +18,7 @@ from shorts.pipeline import Pipeline
 
 app = typer.Typer(help="Shorts Factory CLI")
 
+
 @app.command()
 def serve(
     host: str = typer.Option("127.0.0.1", help="Bind host"),
@@ -28,6 +29,43 @@ def serve(
     from shorts.web.app import app as web_app
 
     uvicorn.run(web_app, host=host, port=port)
+
+
+def _get_completed_steps(conn: sqlite3.Connection, job_id: str) -> set[str]:
+    """Fetch the set of completed steps for a given job ID."""
+    rows = conn.execute(
+        "SELECT step_name FROM step_results WHERE job_id=? AND status='done'",
+        (job_id,),
+    ).fetchall()
+    return {r["step_name"] for r in rows}
+
+
+def _run_single_step(
+    conn: sqlite3.Connection, job_id: str, step_name: str
+) -> tuple[str, str]:
+    """Execute a single pipeline step and record the result."""
+    import importlib
+
+    node = importlib.import_module(f"shorts.nodes.{step_name}")
+    job = conn.execute(
+        "SELECT execution_context FROM jobs WHERE id=?", (job_id,)
+    ).fetchone()
+    ctx = json.loads(job["execution_context"] or "{}") if job else {}
+    result = node.run(job_id, ctx, conn, {})
+    conn.execute(
+        "INSERT OR REPLACE INTO step_results "
+        "(job_id, step_name, status, output_path, output_checksum) VALUES (?,?,?,?,?)",
+        (
+            job_id,
+            step_name,
+            result.status,
+            result.output_path,
+            result.output_checksum,
+        ),
+    )
+    conn.commit()
+    return result.status, result.error_msg
+
 
 @app.command()
 def run(
@@ -43,11 +81,7 @@ def run(
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     try:
-        rows = conn.execute(
-            "SELECT step_name FROM step_results WHERE job_id=? AND status='done'",
-            (job_id,),
-        ).fetchall()
-        done: set = {r["step_name"] for r in rows}
+        done: set[str] = _get_completed_steps(conn, job_id)
 
         while True:
             runnable = pipeline.get_runnable_steps(done)
@@ -57,34 +91,17 @@ def run(
             step_name = runnable[0]
             typer.echo(f"Running step: {step_name}")
 
-            import importlib
+            status, error_msg = _run_single_step(conn, job_id, step_name)
 
-            node = importlib.import_module(f"shorts.nodes.{step_name}")
-            job = conn.execute(
-                "SELECT execution_context FROM jobs WHERE id=?", (job_id,)
-            ).fetchone()
-            ctx = json.loads(job["execution_context"] or "{}") if job else {}
-            result = node.run(job_id, ctx, conn, {})
-            conn.execute(
-                "INSERT OR REPLACE INTO step_results "
-                "(job_id, step_name, status, output_path, output_checksum) VALUES (?,?,?,?,?)",
-                (
-                    job_id,
-                    step_name,
-                    result.status,
-                    result.output_path,
-                    result.output_checksum,
-                ),
-            )
-            conn.commit()
-            typer.echo(f"  status={result.status}")
-            if result.status in ("done", "skipped"):
+            typer.echo(f"  status={status}")
+            if status in ("done", "skipped"):
                 done.add(step_name)
             else:
-                typer.echo(f"  error: {result.error_msg}")
+                typer.echo(f"  error: {error_msg}")
                 break
     finally:
         conn.close()
+
 
 @app.command()
 def step(
@@ -111,6 +128,7 @@ def step(
     else:
         typer.echo(f"Unknown action: {action}", err=True)
         raise typer.Exit(1)
+
 
 @app.command()
 def voice(
@@ -139,6 +157,7 @@ def voice(
     else:
         typer.echo(f"Unknown action: {action}", err=True)
         raise typer.Exit(1)
+
 
 if __name__ == "__main__":
     app()
