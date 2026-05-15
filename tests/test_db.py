@@ -1,6 +1,5 @@
 import os
 import sqlite3
-import pytest
 from shorts.db import init_db
 
 def test_init_db_creates_tables(tmp_path):
