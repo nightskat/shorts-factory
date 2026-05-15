@@ -24,7 +24,8 @@ def _get_output_paths(workspace_dir: str, job_id: str) -> Tuple[str, str]:
 
 def _calculate_checksum(file_path: str) -> str:
     with open(file_path, "rb") as f:
-        return hashlib.sha256(f.read()).hexdigest()
+        # ⚡ Bolt: Use Python 3.11+ file_digest to prevent loading large files into memory
+        return hashlib.file_digest(f, "sha256").hexdigest()
 
 def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connection, services: dict[str, Any]) -> StepResult:
     # 1. Query db_conn to find the output_path of the idea_gen step for this job_id

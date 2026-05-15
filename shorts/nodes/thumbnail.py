@@ -24,7 +24,8 @@ def _get_rendered_video_path(job_id: str, db_conn: sqlite3.Connection) -> str | 
 def _calculate_checksum(file_path: str) -> str:
     """Calculate the SHA256 checksum of a file."""
     with open(file_path, "rb") as f:
-        return hashlib.sha256(f.read()).hexdigest()
+        # ⚡ Bolt: Use Python 3.11+ file_digest to prevent loading large files into memory
+        return hashlib.file_digest(f, "sha256").hexdigest()
 
 
 def _generate_placeholder_thumbnail(job_id: str, tmp_path: str, final_path: str) -> StepResult:
