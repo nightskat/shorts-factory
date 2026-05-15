@@ -56,9 +56,11 @@ class PexelsClipsProvider(ClipsProvider):
             return data.get("videos", [])
 
         except requests.exceptions.RequestException as e:
-            raise ProviderError(f"Network error during Pexels search: {str(e)}")
+            raise ProviderError(f"Network error during Pexels search: {str(e)!s}") from e
+        except ProviderError:
+            raise
         except Exception as e:
-            raise ProviderError(f"Unexpected error in Pexels provider: {str(e)}")
+            raise ProviderError(f"Unexpected error in Pexels provider: {str(e)!s}") from e
 
     def _process_videos(self, videos: List[Dict[Any, Any]]) -> List[Dict[Any, Any]]:
         results = []
