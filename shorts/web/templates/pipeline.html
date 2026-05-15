@@ -40,7 +40,7 @@
       </td>
       <td>
         {% if not sr or sr.status in ('pending', 'failed') %}
-        <form method="post" action="/pipeline/run" style="display:inline;">
+        <form method="post" action="/pipeline/run" style="display:inline;" onsubmit="handlePipelineSubmit(event, this)">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <input type="hidden" name="job_id" value="{{ job.id }}">
           <input type="hidden" name="step_name" value="{{ step }}">
@@ -59,4 +59,43 @@
   <p style="color:#666;font-size:0.875rem;">Chưa có job nào. Tạo job trong tab <a href="/ideas">Ideas</a> trước.</p>
 </div>
 {% endif %}
+
+<script>
+async function handlePipelineSubmit(event, form) {
+  event.preventDefault();
+  const btn = form.querySelector('button[type=submit]');
+  const originalText = btn.textContent;
+
+  btn.disabled = true;
+  btn.setAttribute('aria-busy', 'true');
+  btn.textContent = 'Đang chạy...';
+
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData.entries());
+
+  try {
+    const response = await fetch(form.action, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (response.ok) {
+      window.location.reload();
+    } else {
+      console.error('Pipeline step failed');
+      btn.disabled = false;
+      btn.removeAttribute('aria-busy');
+      btn.textContent = originalText;
+    }
+  } catch (err) {
+    console.error('Network error:', err);
+    btn.disabled = false;
+    btn.removeAttribute('aria-busy');
+    btn.textContent = originalText;
+  }
+}
+</script>
 {% endblock %}
