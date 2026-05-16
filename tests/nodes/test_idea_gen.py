@@ -1,7 +1,9 @@
 import pytest
 import os
+import sqlite3
 from unittest.mock import MagicMock, patch
 from shorts.nodes.idea_gen import run
+from shorts.nodes import StepResult
 
 
 def test_run_success(memory_db, tmp_path):
@@ -49,7 +51,7 @@ def test_run_without_few_shot(memory_db, tmp_path):
 
     services = {}
 
-    with patch('shorts.nodes.idea_gen.get_llm_provider', return_value=mock_llm):
+    with patch('shorts.nodes.idea_gen.get_llm_provider', return_value=mock_llm) as mock_get_llm:
         result = run("job124", execution_context, memory_db, services)
 
     assert result.status == "done"

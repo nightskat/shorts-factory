@@ -1,4 +1,5 @@
 from shorts.db import init_db
+from shorts.config import DB_PATH
 from shorts.utils.rollout import log_checkpoint
 
 def test_scaffold_integrity(tmp_path):

@@ -1,6 +1,6 @@
 import json
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from shorts.providers.llm.claude_cli import ClaudeCLILLMProvider
 from shorts.providers.llm.base import ProviderError
 

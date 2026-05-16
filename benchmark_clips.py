@@ -3,7 +3,8 @@ import json
 import os
 import sqlite3
 import shutil
-from unittest.mock import patch
+import urllib.request
+from unittest.mock import MagicMock, patch
 from shorts.nodes.clips import run
 
 SCHEMA = """

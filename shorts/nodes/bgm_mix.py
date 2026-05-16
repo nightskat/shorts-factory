@@ -1,20 +1,47 @@
+# bgm_mix.py — mix TTS audio with background music via ffmpeg
+# Reads tts output_path from step_results, mixes BGM at 0.15 volume.
 import os
 import hashlib
 import sqlite3
 import subprocess
-from typing import Any, Optional
+from typing import Any
 from shorts.nodes import StepResult
 
-def _get_tts_path(db_conn: sqlite3.Connection, job_id: str) -> Optional[str]:
+
+def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connection, services: dict[str, Any]) -> StepResult:
+    env = execution_context.get("env", {})
+
+    bgm_path = env.get("BGM_PATH")
+    if not bgm_path:
+        return StepResult(status="skipped")
+
     cursor = db_conn.cursor()
     cursor.execute(
         "SELECT output_path FROM step_results WHERE job_id = ? AND step_name = ? AND status = 'done'",
         (job_id, "tts")
     )
     row = cursor.fetchone()
-    return row[0] if row else None
+    if not row or not row[0]:
+        return StepResult(
+            status="error",
+            error_msg="Could not find successful tts step output for this job."
+        )
 
-def _run_ffmpeg(tts_path: str, bgm_path: str, tmp_path: str) -> Optional[StepResult]:
+    tts_path = row[0]
+
+    if not os.path.exists(tts_path):
+        return StepResult(
+            status="error",
+            error_msg=f"TTS file not found at {tts_path}"
+        )
+
+    workspace_dir = execution_context.get("workspace_dir", os.getcwd())
+    output_dir = os.path.join(workspace_dir, "data", "audio")
+    os.makedirs(output_dir, exist_ok=True)
+
+    final_path = os.path.join(output_dir, f"{job_id}_mixed.mp3")
+    tmp_path = final_path + ".tmp"
+
     cmd = [
         "ffmpeg", "-y",
         "-i", tts_path,
@@ -36,39 +63,6 @@ def _run_ffmpeg(tts_path: str, bgm_path: str, tmp_path: str) -> Optional[StepRes
         return StepResult(status="error", error_msg="ffmpeg bgm_mix timed out")
     except FileNotFoundError:
         return StepResult(status="error", error_msg="ffmpeg not found")
-
-    return None
-
-def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connection, services: dict[str, Any]) -> StepResult:
-    env = execution_context.get("env", {})
-
-    bgm_path = env.get("BGM_PATH")
-    if not bgm_path:
-        return StepResult(status="skipped")
-
-    tts_path = _get_tts_path(db_conn, job_id)
-    if not tts_path:
-        return StepResult(
-            status="error",
-            error_msg="Could not find successful tts step output for this job."
-        )
-
-    if not os.path.exists(tts_path):
-        return StepResult(
-            status="error",
-            error_msg=f"TTS file not found at {tts_path}"
-        )
-
-    workspace_dir = execution_context.get("workspace_dir", os.getcwd())
-    output_dir = os.path.join(workspace_dir, "data", "audio")
-    os.makedirs(output_dir, exist_ok=True)
-
-    final_path = os.path.join(output_dir, f"{job_id}_mixed.mp3")
-    tmp_path = final_path + ".tmp"
-
-    ffmpeg_error = _run_ffmpeg(tts_path, bgm_path, tmp_path)
-    if ffmpeg_error:
-        return ffmpeg_error
 
     os.replace(tmp_path, final_path)
 

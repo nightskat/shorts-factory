@@ -1,3 +1,4 @@
+import pytest
 from abc import ABC
 try:
     from shorts.providers.clips import ClipsProvider
