@@ -19,6 +19,11 @@ def _process_scene(i: int, scene: dict, job_id: str, clips_dir: str, pexels: Any
         results = pexels.search(description, per_page=1)
         # The PexelsClipsProvider returns a list of dicts, each with a 'url' key
         video_url = results[0]["url"]
+
+        # Security: Validate URL scheme to prevent SSRF and arbitrary local file reads
+        if not (video_url.startswith("http://") or video_url.startswith("https://")):
+            raise ValueError(f"Invalid URL scheme in {video_url}. Only http and https are allowed.")
+
         clip_path = os.path.join(clips_dir, f"{job_id}_clip_{i}.mp4")
         urllib.request.urlretrieve(video_url, clip_path)
     else:

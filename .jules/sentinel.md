@@ -7,3 +7,7 @@
 **Vulnerability:** The FastAPI application was not returning standard HTTP security headers, leaving it vulnerable to common client-side attacks like clickjacking, MIME-type sniffing, and failing to enforce HTTPS properly.
 **Learning:** Adding a generic `http` middleware in FastAPI is a simple but effective defense-in-depth approach to globally inject security headers into every HTTP response.
 **Prevention:** Always include an HTTP middleware or configure the reverse proxy to append headers like `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, `X-XSS-Protection`, and `Referrer-Policy`.
+## 2024-05-18 - Prevent SSRF in `urllib.request.urlretrieve`
+**Vulnerability:** The `urllib.request.urlretrieve` function was being used to fetch video URLs directly from a third-party API response without any URL scheme validation. Because `urllib.request` handles `file://` and `ftp://` schemes by default, this creates a potential Server-Side Request Forgery (SSRF) and Local File Read vulnerability if the API response is compromised or manipulated.
+**Learning:** Functions that fetch URLs natively often support more than just HTTP. Without strict validation, they can be tricked into interacting with internal network resources or reading local files.
+**Prevention:** Always strictly validate the URL scheme (e.g., `startswith("http://")` or `startswith("https://")`) before passing external input to any URL fetching function.
