@@ -2,6 +2,6 @@
 **Learning:** For a small project with basic jinja setup, there might not be a central layout management logic that automatically highlights the current page on the navigation bar, or some form might be missing the UX pattern that other pages have setup. It's an easy win to unify these things and make sure we have basic navigation context and loading state feedbacks.
 **Action:** Always check base templates, active states of elements based on context, and forms UX (such as loading indicators or double click protections).
 
-## 2025-05-15 - Async form handling as a dual bug-fix and UX improvement
+## 2026-05-15 - Async form handling as a dual bug-fix and UX improvement
 **Learning:** I encountered a bug where a form submitted via standard POST to an endpoint expecting a JSON payload (`/pipeline/run`), causing the backend to crash. By implementing an AJAX/fetch handler to fix the serialization issue, it created a natural opportunity to simultaneously implement much-needed async UX improvements (e.g., disabling the button, showing "Đang chạy..." text, and adding `aria-busy="true"`). Users receive significantly better feedback for long-running pipeline steps.
 **Action:** When fixing backend or serialization errors on form endpoints, always evaluate if the fix presents a straightforward opportunity to introduce missing async loading states, enhancing the user experience alongside technical correctness.

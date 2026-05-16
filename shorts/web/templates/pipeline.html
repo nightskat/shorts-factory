@@ -86,12 +86,14 @@ async function handlePipelineSubmit(event, form) {
       window.location.reload();
     } else {
       console.error('Pipeline step failed');
+      alert('Pipeline step failed: Server error.');
       btn.disabled = false;
       btn.removeAttribute('aria-busy');
       btn.textContent = originalText;
     }
   } catch (err) {
     console.error('Network error:', err);
+    alert('Pipeline step failed: Network error.');
     btn.disabled = false;
     btn.removeAttribute('aria-busy');
     btn.textContent = originalText;
