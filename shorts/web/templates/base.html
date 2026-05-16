@@ -34,6 +34,8 @@
     border-radius: 4px; cursor: pointer; font-size: 0.875rem;
   }
   button:hover, .btn:hover { background: #16213e; }
+  button:focus-visible, .btn:focus-visible { outline: 2px solid #e94560; outline-offset: 2px; }
+  button:disabled, .btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.8rem; }
   .btn-danger { background: #842029; }
   .btn-danger:hover { background: #6c1d23; }
@@ -55,12 +57,12 @@
 </style>
 </head>
 <body>
-<nav>
+<nav aria-label="Main Navigation">
   <span class="brand">Shorts Factory</span>
-  <a href="/ideas" {% if active == 'ideas' %}class="active"{% endif %}>Ideas</a>
-  <a href="/pipeline" {% if active == 'pipeline' %}class="active"{% endif %}>Pipeline</a>
-  <a href="/voice" {% if active == 'voice' %}class="active"{% endif %}>Voice</a>
-  <a href="/config" {% if active == 'config' %}class="active"{% endif %}>Config</a>
+  <a href="/ideas" {% if active == 'ideas' %}class="active" aria-current="page"{% endif %}>Ideas</a>
+  <a href="/pipeline" {% if active == 'pipeline' %}class="active" aria-current="page"{% endif %}>Pipeline</a>
+  <a href="/voice" {% if active == 'voice' %}class="active" aria-current="page"{% endif %}>Voice</a>
+  <a href="/config" {% if active == 'config' %}class="active" aria-current="page"{% endif %}>Config</a>
 </nav>
 <main>
   {% block content %}{% endblock %}
