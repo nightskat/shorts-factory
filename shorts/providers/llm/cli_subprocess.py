@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 from shorts.providers.llm.base import ProviderError
 
 SAFE_ENV_KEYS = {
@@ -9,16 +9,16 @@ SAFE_ENV_KEYS = {
     "CLAUDE_CONFIG_DIR", "CODEX_HOME"
 }
 
-def _build_filtered_env(env_allowlist: Optional[List[str]] = None) -> Dict[str, str]:
-    """Build a filtered environment dictionary based on safe keys and allowlist."""
+def _get_filtered_env(env_allowlist: Optional[List[str]] = None) -> Dict[str, str]:
+    """Get a filtered environment dictionary based on allowed keys."""
     allowed_keys = SAFE_ENV_KEYS.copy()
     if env_allowlist:
         allowed_keys.update(env_allowlist)
 
     return {k: v for k, v in os.environ.items() if k in allowed_keys}
 
-def _check_command_result(result: subprocess.CompletedProcess) -> None:
-    """Check the result of a subprocess run and raise ProviderError if it failed."""
+def _handle_subprocess_error(result: subprocess.CompletedProcess) -> None:
+    """Handle non-zero exit codes from subprocess execution."""
     if result.returncode != 0:
         error_msg = f"CLI command failed with exit code {result.returncode}\n"
         if result.stderr:
@@ -46,7 +46,7 @@ def run_cli_command(
     Raises:
         ProviderError: If the command fails or times out.
     """
-    filtered_env = _build_filtered_env(env_allowlist)
+    filtered_env = _get_filtered_env(env_allowlist)
     
     try:
         result = subprocess.run(
@@ -59,7 +59,8 @@ def run_cli_command(
             check=False  # We handle check manually to provide better error messages
         )
         
-        _check_command_result(result)
+        _handle_subprocess_error(result)
+
         return result.stdout
         
     except subprocess.TimeoutExpired as e:
