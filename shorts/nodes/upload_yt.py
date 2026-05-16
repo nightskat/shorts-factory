@@ -34,7 +34,7 @@ def _get_existing_video_id(db_conn: sqlite3.Connection, job_id: str) -> str | No
     return None
 
 
-def _mark_upload_started(db_conn: sqlite3.Connection, job_id: str) -> bool:
+def _mark_upload_started(db_conn: sqlite3.Connection, job_id: str) -> None:
     cursor = db_conn.cursor()
     idem_key = _idempotency_key(job_id)
     cursor.execute(
@@ -42,7 +42,6 @@ def _mark_upload_started(db_conn: sqlite3.Connection, job_id: str) -> bool:
         (job_id, idem_key)
     )
     db_conn.commit()
-    return cursor.rowcount > 0
 
 
 def _perform_upload(job_id: str, video_path: str, services: dict[str, Any]) -> str:
@@ -79,8 +78,7 @@ def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connect
         )
 
     # Phase 1 continued: insert started record
-    if not _mark_upload_started(db_conn, job_id):
-        return StepResult(status="skipped", error_msg="Upload already started by another process.")
+    _mark_upload_started(db_conn, job_id)
 
     # Phase 2: upload
     video_id = _perform_upload(job_id, video_path, services)

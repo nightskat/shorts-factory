@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS approved_scripts (
 
 CREATE TABLE IF NOT EXISTS youtube_uploads (
     job_id TEXT PRIMARY KEY,
-    idempotency_key TEXT UNIQUE,
+    idempotency_key TEXT,
     status TEXT,
     video_id TEXT,
     resumable_session_url TEXT,
