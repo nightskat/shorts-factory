@@ -5,3 +5,7 @@
 ## 2026-05-15 - Async form handling as a dual bug-fix and UX improvement
 **Learning:** I encountered a bug where a form submitted via standard POST to an endpoint expecting a JSON payload (`/pipeline/run`), causing the backend to crash. By implementing an AJAX/fetch handler to fix the serialization issue, it created a natural opportunity to simultaneously implement much-needed async UX improvements (e.g., disabling the button, showing "Đang chạy..." text, and adding `aria-busy="true"`). Users receive significantly better feedback for long-running pipeline steps.
 **Action:** When fixing backend or serialization errors on form endpoints, always evaluate if the fix presents a straightforward opportunity to introduce missing async loading states, enhancing the user experience alongside technical correctness.
+
+## 2026-05-16 - A11y and Tooltips on Ambiguous UI Elements
+**Learning:** Data tables often have repeating generic action buttons (like "Chạy") which are visually clear but ambiguous to screen readers, and truncation without full-text tooltips hides important data like UUIDs and filepaths.
+**Action:** Always add contextual `aria-label` attributes to identical buttons in lists/tables, and add `title` attributes whenever data is truncated for visual layout.
