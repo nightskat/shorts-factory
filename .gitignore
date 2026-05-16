@@ -34,3 +34,8 @@ stdout.txt
 stderr.txt
 reproduce_leak.py
 venv/
+
+# Jules scratch artifacts (never commit — they leak across PRs)
+commit_message.txt
+rewrite_tests.py
+.Jules/
