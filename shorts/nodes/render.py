@@ -33,7 +33,8 @@ def _render_placeholder(job_id: str, final_path: str) -> StepResult:
     os.replace(tmp_path, final_path)
 
     with open(final_path, "rb") as f:
-        checksum = hashlib.sha256(f.read()).hexdigest()
+        # ⚡ Bolt: Use Python 3.11+ file_digest to prevent loading large files into memory
+        checksum = hashlib.file_digest(f, "sha256").hexdigest()
 
     return StepResult(status="done", output_path=final_path, output_checksum=checksum)
 
@@ -69,7 +70,8 @@ def _render_ffmpeg(job_id: str, clip_manifest: list[dict], audio_path: str, outp
     os.replace(tmp_path, final_path)
 
     with open(final_path, "rb") as f:
-        checksum = hashlib.sha256(f.read()).hexdigest()
+        # ⚡ Bolt: Use Python 3.11+ file_digest to prevent loading large files into memory
+        checksum = hashlib.file_digest(f, "sha256").hexdigest()
 
     return StepResult(status="done", output_path=final_path, output_checksum=checksum)
 
