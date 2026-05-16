@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import MagicMock, patch
 from shorts.voice.examples import get_top_examples, add_seed_example
 from shorts.voice.injector import inject_voice_into_system_prompt

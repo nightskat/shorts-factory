@@ -1,6 +1,3 @@
-import os
-import sqlite3
-import pytest
 
 from shorts.nodes.qa_check import run
 
