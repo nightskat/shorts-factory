@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import Dict, List, Optional
+from typing import List, Optional, Dict
 from shorts.providers.llm.base import ProviderError
 
 SAFE_ENV_KEYS = {
@@ -60,7 +60,6 @@ def run_cli_command(
         )
         
         _check_command_result(result)
-            
         return result.stdout
         
     except subprocess.TimeoutExpired as e:

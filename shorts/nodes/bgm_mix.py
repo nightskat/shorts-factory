@@ -73,7 +73,8 @@ def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connect
     os.replace(tmp_path, final_path)
 
     with open(final_path, "rb") as f:
-        checksum = hashlib.sha256(f.read()).hexdigest()
+        # ⚡ Bolt: Use Python 3.11+ file_digest to prevent loading large files into memory
+        checksum = hashlib.file_digest(f, "sha256").hexdigest()
 
     return StepResult(
         status="done",
