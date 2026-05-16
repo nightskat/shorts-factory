@@ -64,4 +64,4 @@ def run_benchmark(num_scenes=10):
     return duration
 
 if __name__ == "__main__":
-    run_benchmark(10)
+    run_benchmark(30)
