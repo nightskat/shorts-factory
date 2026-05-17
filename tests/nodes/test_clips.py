@@ -47,3 +47,20 @@ def test_clips_missing_scenes(memory_db, tmp_path):
     result = run(job_id, execution_context, memory_db, {})
     assert result.status == "error"
     assert "scenes" in result.error_msg
+
+def test_clips_pexels_ssrf_protection(memory_db, tmp_path):
+    import pytest
+    from unittest.mock import MagicMock
+    from shorts.nodes.clips import _process_scene
+
+    pexels_mock = MagicMock()
+    pexels_mock.search.return_value = [{"url": "file:///etc/passwd"}]
+
+    with pytest.raises(ValueError, match="Invalid URL scheme in Pexels result: file:///etc/passwd"):
+        _process_scene(
+            i=0,
+            scene={"description": "Test", "duration_seconds": 5},
+            job_id="test_ssrf",
+            clips_dir=str(tmp_path),
+            pexels=pexels_mock
+        )

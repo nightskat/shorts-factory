@@ -7,3 +7,8 @@
 **Vulnerability:** The FastAPI application was not returning standard HTTP security headers, leaving it vulnerable to common client-side attacks like clickjacking, MIME-type sniffing, and failing to enforce HTTPS properly.
 **Learning:** Adding a generic `http` middleware in FastAPI is a simple but effective defense-in-depth approach to globally inject security headers into every HTTP response.
 **Prevention:** Always include an HTTP middleware or configure the reverse proxy to append headers like `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, `X-XSS-Protection`, and `Referrer-Policy`.
+
+## 2026-05-17 - [Fix Server-Side Request Forgery (SSRF) in media fetching]
+**Vulnerability:** The `clips` pipeline node fetched video URLs dynamically returned by a provider using `urllib.request.urlretrieve` without validating the URL scheme, enabling an attacker (if they could control the provider response) to force the application to read arbitrary local files via the `file://` scheme or scan internal networks via other implicit schemes.
+**Learning:** Functions like `urllib.request.urlretrieve` do not restrict the URL schemes they accept by default. They can implicitly resolve `file://`, `ftp://`, and others, which poses a significant security risk when handling unverified or untrusted URLs.
+**Prevention:** Always strictly validate and allowlist the schemes (e.g., `http://`, `https://`) of any dynamically generated or untrusted URL before passing it to network fetching functions to prevent SSRF and local file reads.
