@@ -83,7 +83,8 @@ def run(job_id: str, execution_context: dict[str, Any], db_conn: sqlite3.Connect
 
     pexels = services.get("pexels")
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    # ⚡ Bolt: Explicitly set high max_workers for highly I/O bound network downloads
+    with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
         futures = [
             executor.submit(_process_scene, i, scene, job_id, clips_dir, pexels)
             for i, scene in enumerate(scenes)
