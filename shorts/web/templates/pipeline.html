@@ -9,7 +9,7 @@
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
     <div>
       <strong>{{ job.title }}</strong>
-      <span class="env-key" style="margin-left:0.5rem;">{{ job.id[:8] }}…</span>
+      <span class="env-key" style="margin-left:0.5rem;" title="{{ job.id }}">{{ job.id[:8] }}…</span>
     </div>
     <span class="badge badge-{{ job.status }}">{{ job.status }}</span>
   </div>
@@ -35,7 +35,7 @@
         <span class="badge badge-pending">pending</span>
         {% endif %}
       </td>
-      <td class="env-key" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+      <td class="env-key" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"{% if sr and sr.output_path %} title="{{ sr.output_path }}"{% endif %}>
         {{ sr.output_path if sr and sr.output_path else '—' }}
       </td>
       <td>
@@ -44,7 +44,7 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <input type="hidden" name="job_id" value="{{ job.id }}">
           <input type="hidden" name="step_name" value="{{ step }}">
-          <button type="submit" class="btn btn-sm">Chạy</button>
+          <button type="submit" class="btn btn-sm" aria-label="Chạy bước {{ step }} cho video {{ job.title }}">Chạy</button>
         </form>
         {% endif %}
       </td>
