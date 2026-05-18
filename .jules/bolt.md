@@ -7,3 +7,6 @@
 ## 2025-05-15 - Peak Memory Spikes from In-Memory File Hashing
 **Learning:** Calculating SHA256 checksums on large artifacts (like `.mp4` video files) using `hashlib.sha256(f.read()).hexdigest()` causes severe memory spikes because the entire file is loaded into RAM at once. For a 100MB file, this consumes 100MB of RAM.
 **Action:** Always use Python 3.11's built-in `hashlib.file_digest(f, "sha256").hexdigest()` for file checksums. It handles chunked reading natively in C, reducing peak memory usage to virtually zero (e.g., ~0.26MB) and avoiding heavy garbage collection pauses.
+## 2025-05-18 - ThreadPoolExecutor Chokes I/O Concurrency with Defaults
+**Learning:** `concurrent.futures.ThreadPoolExecutor` bases its default `max_workers` on `os.cpu_count()` (e.g., `min(32, os.cpu_count() + 4)`). For heavily I/O-bound tasks like downloading multiple video clips or making concurrent API calls, this default artificially chokes network concurrency and drastically reduces performance, because the tasks spend most of their time waiting for network I/O, not using the CPU.
+**Action:** When using `ThreadPoolExecutor` to parallelize heavily I/O-bound tasks, explicitly set a high `max_workers` (e.g., 30) instead of relying on the CPU-based default.
