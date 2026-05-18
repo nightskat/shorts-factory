@@ -31,7 +31,7 @@
     {% for s in scripts %}
       <tr>
         <td class="env-key">{{ s.id }}</td>
-        <td style="max-width:500px;white-space:pre-wrap;word-break:break-word;font-size:0.8rem;">{{ s.script_body[:200] }}{% if s.script_body|length > 200 %}…{% endif %}</td>
+        <td style="max-width:500px;white-space:pre-wrap;word-break:break-word;font-size:0.8rem;" title="{{ s.script_body }}">{{ s.script_body[:200] }}{% if s.script_body|length > 200 %}…{% endif %}</td>
         <td class="env-key">{{ s.approved_at }}</td>
       </tr>
     {% endfor %}

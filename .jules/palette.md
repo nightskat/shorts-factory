@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessibility and Context for Repeating Elements and Truncated Text
+**Learning:** Repeating elements like action buttons (e.g., "Chạy" for every pipeline step) lack context for screen readers. Truncated text (e.g., UUIDs or long paths) leaves users without a way to see the full value. This combination causes significant accessibility and usability issues in data-dense tables.
+**Action:** Always add contextual `aria-label` attributes to repeating generic action buttons (e.g., `aria-label="Chạy bước [tên bước] cho [tên job]"`). Always add `title` attributes to truncated text elements to provide full-text tooltips on hover.

@@ -30,7 +30,7 @@
     <tbody>
     {% for job in jobs %}
       <tr>
-        <td><span class="env-key">{{ job.id[:8] }}…</span></td>
+        <td><span class="env-key" title="{{ job.id }}">{{ job.id[:8] }}…</span></td>
         <td>{{ job.title }}</td>
         <td><span class="badge badge-{{ job.status }}">{{ job.status }}</span></td>
         <td class="env-key">{{ job.created_at }}</td>
