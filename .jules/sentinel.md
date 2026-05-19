@@ -7,3 +7,8 @@
 **Vulnerability:** The FastAPI application was not returning standard HTTP security headers, leaving it vulnerable to common client-side attacks like clickjacking, MIME-type sniffing, and failing to enforce HTTPS properly.
 **Learning:** Adding a generic `http` middleware in FastAPI is a simple but effective defense-in-depth approach to globally inject security headers into every HTTP response.
 **Prevention:** Always include an HTTP middleware or configure the reverse proxy to append headers like `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, `X-XSS-Protection`, and `Referrer-Policy`.
+
+## 2024-05-19 - SSRF Vulnerability in Media Downloading
+**Vulnerability:** Server-Side Request Forgery (SSRF) and arbitrary local file read vulnerability in `shorts/nodes/clips.py` due to passing an unvalidated URL from an external provider (Pexels) directly to `urllib.request.urlretrieve`. If an attacker or a compromised external API returned a `file://` URL, it could be used to read arbitrary files from the local filesystem.
+**Learning:** `urllib.request.urlretrieve` supports multiple schemes, including `file://`. When downloading media based on URLs provided by external sources, even seemingly trusted ones, the scheme must be strictly validated to prevent SSRF and local file access.
+**Prevention:** Always parse URLs using `urllib.parse.urlparse` and explicitly allowlist safe schemes (e.g., `http` and `https`) before downloading files or making external requests.
