@@ -47,3 +47,31 @@ def test_clips_missing_scenes(memory_db, tmp_path):
     result = run(job_id, execution_context, memory_db, {})
     assert result.status == "error"
     assert "scenes" in result.error_msg
+
+class MockPexelsSSRF:
+    def search(self, query, **kwargs):
+        return [{"url": "file:///etc/passwd"}]
+
+def test_clips_ssrf_protection(memory_db, tmp_path):
+    job_id = "job_clips_003"
+
+    scenes = [
+        {"description": "A cat on a mat", "duration_seconds": 5},
+    ]
+    scenes_file = tmp_path / f"{job_id}_scenes.json"
+    scenes_file.write_text(json.dumps(scenes))
+
+    memory_db.execute(
+        "INSERT INTO step_results (job_id, step_name, status, output_path) VALUES (?, ?, ?, ?)",
+        (job_id, "scenes", "done", str(scenes_file))
+    )
+    memory_db.commit()
+
+    execution_context = {"env": {}, "workspace_dir": str(tmp_path)}
+
+    # Run the clips node. It uses a threadpool, so the exception will be caught and wrapped
+    # but let's see how it behaves. If it raises an unhandled exception inside the thread,
+    # concurrent.futures.Future.result() will raise it.
+    import pytest
+    with pytest.raises(ValueError, match="Invalid URL scheme: file"):
+        run(job_id, execution_context, memory_db, {"pexels": MockPexelsSSRF()})
